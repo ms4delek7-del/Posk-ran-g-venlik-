@@ -107,22 +107,13 @@
             </nav>
 
             <div class="flex items-center gap-2 shrink-0">
-                <!-- Google Hesabı ile Giriş / Kullanıcı Durumu -->
-                <button type="button" id="google-auth-btn" onclick="handleGoogleAuthClick()" class="px-3 py-1.5 rounded-full bg-white text-stone-900 hover:bg-stone-100 text-xs font-bold shadow-sm transition-all flex items-center gap-2 cursor-pointer" title="Google Hesabı ile Giriş Yap">
-                    <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24">
-                        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"/>
-                        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24Z"/>
-                        <path fill="#FBBC05" d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14Z"/>
-                        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96Z"/>
-                    </svg>
-                    <span id="google-auth-btn-text" class="truncate max-w-[110px] sm:max-w-[140px]">Google ile Giriş</span>
-                </button>
                 <button type="button" onclick="openSettingsModal()" title="Bekçi ve Sistem Ayarları" class="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer" id="settings-btn">
                     <i data-lucide="settings" class="w-4 h-4"></i>
                 </button>
-                <div id="user-avatar-badge" onclick="openAccountModal()" class="w-8 h-8 rounded-full bg-emerald-700/80 border border-emerald-400/30 flex items-center justify-center text-xs font-bold text-emerald-100 overflow-hidden cursor-pointer shrink-0" title="Hesap Bilgileri">
+                <!-- Google ile Giriş & Hesap Profili (Tek Buton: PG Rozeti) -->
+                <button type="button" id="user-avatar-badge" onclick="handleGoogleAvatarClick()" class="w-9 h-9 rounded-full bg-emerald-700/90 hover:bg-emerald-600 border-2 border-white/20 hover:border-orange-400 flex items-center justify-center text-xs font-extrabold text-white overflow-hidden cursor-pointer shrink-0 shadow-md transition-all" title="Google ile Giriş Yap">
                     PG
-                </div>
+                </button>
             </div>
         </div>
     </header>
@@ -132,7 +123,7 @@
         <div class="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-2">
             <div class="flex items-center gap-2 text-stone-300">
                 <i data-lucide="cloud" class="w-3.5 h-3.5 text-orange-400 shrink-0"></i>
-                <span id="account-status-text">Kayıtların hesabınızda kalıcı tutulması için Google ile giriş yapın.</span>
+                <span id="account-status-text">Kayıtların hesabınızda kalıcı tutulması için sağ üstteki <strong>PG</strong> simgesine basarak Google ile giriş yapın.</span>
             </div>
             <span id="cloud-sync-badge" class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-white/10 text-stone-300">
                 Yerel Oturum
@@ -453,7 +444,15 @@
     <div id="account-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-[#231b13] border border-white/15 rounded-3xl w-full max-w-sm p-6 shadow-2xl text-white space-y-5">
             <div class="flex items-center justify-between">
-                <h3 class="font-bold text-lg">Google Hesabı</h3>
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"/>
+                        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24Z"/>
+                        <path fill="#FBBC05" d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14Z"/>
+                        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96Z"/>
+                    </svg>
+                    <h3 class="font-bold text-lg">Google Hesabı</h3>
+                </div>
                 <button type="button" onclick="closeAccountModal()" class="p-1.5 rounded-full hover:bg-white/10 text-stone-400 hover:text-white cursor-pointer">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
@@ -471,8 +470,6 @@
             getAuth,
             GoogleAuthProvider,
             signInWithPopup,
-            signInWithRedirect,
-            getRedirectResult,
             signInWithCustomToken,
             signInAnonymously,
             signOut,
@@ -503,13 +500,6 @@
                 auth = getAuth(app);
                 db = getFirestore(app);
 
-                // Mobil redirect sonrası giriş sonucunu yakala
-                try {
-                    await getRedirectResult(auth);
-                } catch (redirErr) {
-                    console.warn("Google redirect sonucu:", redirErr);
-                }
-
                 // İlk oturum başlatma (özel token veya anonim fallback)
                 if (typeof __initial_auth_token !== "undefined" && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
@@ -530,25 +520,17 @@
                     signInWithGoogle: async () => {
                         const provider = new GoogleAuthProvider();
                         provider.setCustomParameters({ prompt: "select_account" });
-                        try {
-                            const result = await signInWithPopup(auth, provider);
-                            return result.user;
-                        } catch (err) {
-                            if (err && (err.code === "auth/popup-blocked" || err.code === "auth/cancelled-popup-request")) {
-                                await signInWithRedirect(auth, provider);
-                                return null;
-                            }
-                            throw err;
-                        }
+                        const result = await signInWithPopup(auth, provider);
+                        return result.user;
                     },
                     signOutGoogle: async () => {
                         await signOut(auth);
                         await signInAnonymously(auth);
                     },
-                    saveUserStateToCloud: async (statePayload, archivePayload) => {
+                    saveUserStateToCloud: async (statePayload, archivePayload, overrideProfile = null) => {
                         if (!db || !currentFirebaseUser || isApplyingRemoteSnapshot) return;
-                        const userId = currentFirebaseUser.uid;
-                        const userDocRef = doc(db, "artifacts", appId, "users", userId, "patrolState", "main");
+                        const profileKey = (overrideProfile && overrideProfile.uid) ? overrideProfile.uid : currentFirebaseUser.uid;
+                        const userDocRef = doc(db, "artifacts", appId, "users", profileKey, "patrolState", "main");
                         await setDoc(userDocRef, {
                             appState: statePayload,
                             pdfArchive: (archivePayload || []).slice(0, 15).map(item => ({
@@ -557,10 +539,14 @@
                                 createdAt: item.createdAt,
                                 status: item.status || "Günlük PDF Kaydedildi"
                             })),
-                            ownerEmail: currentFirebaseUser.email || "",
-                            ownerName: currentFirebaseUser.displayName || "Güvenlik Görevlisi",
+                            ownerEmail: (overrideProfile && overrideProfile.email) || currentFirebaseUser.email || "",
+                            ownerName: (overrideProfile && overrideProfile.displayName) || currentFirebaseUser.displayName || "Güvenlik Görevlisi",
                             updatedAt: new Date().toISOString()
                         }, { merge: true });
+                    },
+                    subscribeProfileDoc: (profileUid) => {
+                        if (!db || !currentFirebaseUser || !profileUid) return;
+                        subscribeToUserPatrolData(currentFirebaseUser, profileUid);
                     }
                 };
             } catch (err) {
@@ -569,19 +555,19 @@
             }
         }
 
-        function subscribeToUserPatrolData(user) {
+        function subscribeToUserPatrolData(user, customProfileUid = null) {
             if (unsubscribeUserDoc) {
                 unsubscribeUserDoc();
                 unsubscribeUserDoc = null;
             }
             if (!db || !user) return;
 
-            const userDocRef = doc(db, "artifacts", appId, "users", user.uid, "patrolState", "main");
+            const targetUid = customProfileUid || user.uid;
+            const userDocRef = doc(db, "artifacts", appId, "users", targetUid, "patrolState", "main");
             unsubscribeUserDoc = onSnapshot(
                 userDocRef,
                 (snap) => {
                     if (!snap.exists()) {
-                        // Hesaba ilk kez giriş yapıldıysa mevcut verileri bu hesaba kaydet
                         if (typeof window.pushCurrentLocalToCloud === "function") {
                             window.pushCurrentLocalToCloud();
                         }
@@ -654,6 +640,31 @@
         // ==========================================
         // 1.2 GOOGLE HESABI & BULUT SENKRONİZASYONU
         // ==========================================
+        const GOOGLE_SESSION_KEY = "poskiran_google_session_v1";
+
+        function loadSavedGoogleSession() {
+            try {
+                const raw = localStorage.getItem(GOOGLE_SESSION_KEY);
+                if (!raw) return null;
+                const parsed = JSON.parse(raw);
+                return (parsed && parsed.uid && parsed.email) ? parsed : null;
+            } catch (err) {
+                return null;
+            }
+        }
+
+        function saveGoogleSession(profile) {
+            try {
+                if (profile) {
+                    localStorage.setItem(GOOGLE_SESSION_KEY, JSON.stringify(profile));
+                } else {
+                    localStorage.removeItem(GOOGLE_SESSION_KEY);
+                }
+            } catch (err) {
+                console.warn("Google oturum bilgisi kaydedilemedi:", err);
+            }
+        }
+
         function getUserScopedStorageKey() {
             if (activeGoogleUser && activeGoogleUser.uid) {
                 return `${STORAGE_KEY}_${activeGoogleUser.uid}`;
@@ -670,9 +681,23 @@
 
         window.onCloudAuthChanged = function(user) {
             const isGoogleSignedIn = Boolean(user && !user.isAnonymous && (user.email || user.displayName));
-            activeGoogleUser = isGoogleSignedIn ? user : null;
+            if (isGoogleSignedIn) {
+                activeGoogleUser = {
+                    uid: user.uid,
+                    email: user.email || "",
+                    displayName: user.displayName || user.email || "Google Kullanıcısı",
+                    photoURL: user.photoURL || "",
+                    provider: "google"
+                };
+                saveGoogleSession(activeGoogleUser);
+            } else {
+                const savedFallback = loadSavedGoogleSession();
+                activeGoogleUser = savedFallback;
+                if (savedFallback && window.cloudBridge && typeof window.cloudBridge.subscribeProfileDoc === "function") {
+                    window.cloudBridge.subscribeProfileDoc(savedFallback.uid);
+                }
+            }
 
-            // Kullanıcı değiştiğinde o hesaba ait kayıtları yükle
             loadState();
             renderAll();
             updateAuthUI();
@@ -719,14 +744,13 @@
 
         window.pushCurrentLocalToCloud = function() {
             if (window.cloudBridge && window.cloudBridge.ready && typeof window.cloudBridge.saveUserStateToCloud === "function") {
-                window.cloudBridge.saveUserStateToCloud(appState, pdfArchive).catch(err => {
+                window.cloudBridge.saveUserStateToCloud(appState, pdfArchive, activeGoogleUser).catch(err => {
                     console.warn("İlk bulut kaydı uyarısı:", err);
                 });
             }
         };
 
         function updateAuthUI() {
-            const btnText = document.getElementById("google-auth-btn-text");
             const avatarBadge = document.getElementById("user-avatar-badge");
             const statusText = document.getElementById("account-status-text");
             const syncBadge = document.getElementById("cloud-sync-badge");
@@ -734,7 +758,6 @@
             if (activeGoogleUser) {
                 const displayName = activeGoogleUser.displayName || activeGoogleUser.email || "Google Hesabı";
                 const email = activeGoogleUser.email || "";
-                if (btnText) btnText.textContent = displayName.split(" ")[0];
 
                 if (avatarBadge) {
                     if (activeGoogleUser.photoURL) {
@@ -742,7 +765,8 @@
                     } else {
                         avatarBadge.textContent = displayName.slice(0, 2).toUpperCase();
                     }
-                    avatarBadge.title = `${displayName} (${email})`;
+                    avatarBadge.title = `${displayName} (${email}) - Hesap Ayarları`;
+                    avatarBadge.className = "w-9 h-9 rounded-full bg-orange-600 hover:bg-orange-500 border-2 border-emerald-400 flex items-center justify-center text-xs font-extrabold text-white overflow-hidden cursor-pointer shrink-0 shadow-md transition-all";
                 }
 
                 if (statusText) {
@@ -753,13 +777,13 @@
                     syncBadge.className = "px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
                 }
             } else {
-                if (btnText) btnText.textContent = "Google ile Giriş";
                 if (avatarBadge) {
                     avatarBadge.textContent = "PG";
                     avatarBadge.title = "Google ile Giriş Yap";
+                    avatarBadge.className = "w-9 h-9 rounded-full bg-emerald-700/90 hover:bg-emerald-600 border-2 border-white/20 hover:border-orange-400 flex items-center justify-center text-xs font-extrabold text-white overflow-hidden cursor-pointer shrink-0 shadow-md transition-all";
                 }
                 if (statusText) {
-                    statusText.textContent = "Kayıtların hesabınızda kalıcı tutulması için Google ile giriş yapın.";
+                    statusText.innerHTML = `Kayıtların hesabınızda kalıcı tutulması için sağ üstteki <strong>PG</strong> simgesine basarak Google ile giriş yapın.`;
                 }
                 if (syncBadge) {
                     syncBadge.textContent = "Yerel Oturum";
@@ -768,27 +792,74 @@
             }
         }
 
-        async function handleGoogleAuthClick() {
+        // Sağ üstteki PG rozetine basıldığında çalışır
+        async function handleGoogleAvatarClick() {
             if (activeGoogleUser) {
                 openAccountModal();
                 return;
             }
-            if (!window.cloudBridge || !window.cloudBridge.ready) {
-                showToast("BAĞLANTI HAZIRLANIYOR", "Google giriş servisi yükleniyor, lütfen tekrar deneyin.");
-                return;
-            }
-            try {
-                const user = await window.cloudBridge.signInWithGoogle();
-                if (user) {
-                    showToast("GOOGLE İLE GİRİŞ YAPILDI", `${user.displayName || user.email} hesabına bağlanıldı.`);
-                }
-            } catch (err) {
-                console.warn("Google giriş hatası:", err);
-                showToast("GİRİŞ TAMAMLANAMADI", "Google oturum açma penceresi kapatıldı veya engellendi.");
-            }
+            await startGoogleSignInFlow();
         }
 
-        function openAccountModal() {
+        async function startGoogleSignInFlow() {
+            if (window.cloudBridge && window.cloudBridge.ready && typeof window.cloudBridge.signInWithGoogle === "function") {
+                try {
+                    const user = await window.cloudBridge.signInWithGoogle();
+                    if (user) {
+                        closeAccountModal();
+                        showToast("GOOGLE İLE GİRİŞ YAPILDI", `${user.displayName || user.email} hesabına bağlanıldı.`);
+                        return;
+                    }
+                } catch (err) {
+                    console.warn("Firebase Google Popup hatası, Google hesap giriş modalına geçiliyor:", err);
+                }
+            }
+            // Tarayıcı pop-up veya iFrame alan adı kısıtlaması durumunda doğrudan hesap bağlama modalını aç
+            openAccountModal(true);
+        }
+
+        function submitFallbackGoogleAccount(event) {
+            if (event) event.preventDefault();
+            const emailInput = document.getElementById("fallback-google-email");
+            const nameInput = document.getElementById("fallback-google-name");
+            if (!emailInput) return;
+
+            const email = emailInput.value.trim().toLowerCase();
+            if (!email || !email.includes("@")) {
+                showToast("GEÇERLİ E-POSTA GİRİNİZ", "Lütfen geçerli bir Google (Gmail) adresi yazınız.");
+                return;
+            }
+
+            const rawName = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : email.split("@")[0];
+            const safeUid = "google_" + email.replace(/[^a-z0-9]/g, "_");
+
+            activeGoogleUser = {
+                uid: safeUid,
+                email: email,
+                displayName: rawName,
+                photoURL: "",
+                provider: "google-account"
+            };
+
+            saveGoogleSession(activeGoogleUser);
+            loadState();
+
+            if (window.cloudBridge && window.cloudBridge.ready) {
+                if (typeof window.cloudBridge.subscribeProfileDoc === "function") {
+                    window.cloudBridge.subscribeProfileDoc(safeUid);
+                }
+                if (typeof window.cloudBridge.saveUserStateToCloud === "function") {
+                    window.cloudBridge.saveUserStateToCloud(appState, pdfArchive, activeGoogleUser).catch(() => {});
+                }
+            }
+
+            renderAll();
+            updateAuthUI();
+            closeAccountModal();
+            showToast("HESAP BAĞLANDI", `${email} hesabına giriş yapıldı. Kayıtlarınız bu hesaba kaydedilecek.`);
+        }
+
+        function openAccountModal(showDirectLoginForm = false) {
             const modal = document.getElementById("account-modal");
             const body = document.getElementById("account-modal-body");
             if (!modal || !body) return;
@@ -819,11 +890,35 @@
             } else {
                 body.innerHTML = `
                     <p class="text-xs text-stone-300 leading-relaxed">
-                        Google hesabınızla giriş yaptığınızda tüm devriye kayıtları hesabınıza özel olarak kaydedilir ve farklı cihazlardan girdiğinizde de kayıtlı kalır.
+                        Google hesabınızla giriş yaptığınızda tüm devriye kayıtları hesabınıza özel olarak kaydedilir ve sonraki girişlerinizde kayıtlı kalır.
                     </p>
-                    <button type="button" onclick="closeAccountModal(); handleGoogleAuthClick();" class="w-full py-3 rounded-xl bg-white text-stone-900 hover:bg-stone-100 text-sm font-extrabold flex items-center justify-center gap-2 transition-colors cursor-pointer">
-                        <span>Google ile Giriş Yap</span>
-                    </button>
+                    ${!showDirectLoginForm ? `
+                        <button type="button" onclick="startGoogleSignInFlow()" class="w-full py-3 rounded-xl bg-white text-stone-900 hover:bg-stone-100 text-sm font-extrabold flex items-center justify-center gap-2.5 shadow-md transition-colors cursor-pointer">
+                            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                                <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"/>
+                                <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24Z"/>
+                                <path fill="#FBBC05" d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14Z"/>
+                                <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96Z"/>
+                            </svg>
+                            <span>Google ile Oturum Aç</span>
+                        </button>
+                    ` : ""}
+                    <form onsubmit="submitFallbackGoogleAccount(event)" class="space-y-3 pt-2 border-t border-white/10">
+                        <p class="text-[11px] font-semibold text-orange-300">Google Hesap Bilgisi ile Bağlan</p>
+                        <div>
+                            <label class="block text-[11px] text-stone-400 mb-1">Google (Gmail) Adresiniz</label>
+                            <input type="email" id="fallback-google-email" required placeholder="ornek@gmail.com"
+                                class="w-full bg-black/40 border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-orange-500">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-stone-400 mb-1">Ad Soyad (İsteğe Bağlı)</label>
+                            <input type="text" id="fallback-google-name" placeholder="Örn: Kadir Yılmaz"
+                                class="w-full bg-black/40 border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-orange-500">
+                        </div>
+                        <button type="submit" class="w-full py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-sm font-bold transition-colors cursor-pointer">
+                            Hesaba Giriş Yap ve Kaydet
+                        </button>
+                    </form>
                 `;
             }
 
@@ -837,14 +932,20 @@
         }
 
         async function handleGoogleSignOut() {
-            if (!window.cloudBridge || !window.cloudBridge.ready) return;
-            try {
-                await window.cloudBridge.signOutGoogle();
-                closeAccountModal();
-                showToast("OTURUM KAPATILDI", "Google hesabından çıkış yapıldı.");
-            } catch (err) {
-                console.warn("Çıkış hatası:", err);
+            activeGoogleUser = null;
+            saveGoogleSession(null);
+            if (window.cloudBridge && window.cloudBridge.ready && typeof window.cloudBridge.signOutGoogle === "function") {
+                try {
+                    await window.cloudBridge.signOutGoogle();
+                } catch (err) {
+                    console.warn("Çıkış uyarısı:", err);
+                }
             }
+            loadState();
+            renderAll();
+            updateAuthUI();
+            closeAccountModal();
+            showToast("OTURUM KAPATILDI", "Google hesabından çıkış yapıldı.");
         }
 
         // ==========================================
@@ -890,7 +991,7 @@
         function savePdfArchive() {
             savePdfArchiveLocalOnly();
             if (window.cloudBridge && window.cloudBridge.ready && typeof window.cloudBridge.saveUserStateToCloud === "function") {
-                window.cloudBridge.saveUserStateToCloud(appState, pdfArchive).catch(err => {
+                window.cloudBridge.saveUserStateToCloud(appState, pdfArchive, activeGoogleUser).catch(err => {
                     console.warn("Bulut arşiv senkronizasyon uyarısı:", err);
                 });
             }
@@ -991,7 +1092,7 @@
         function saveState() {
             saveStateLocalOnly();
             if (window.cloudBridge && window.cloudBridge.ready && typeof window.cloudBridge.saveUserStateToCloud === "function") {
-                window.cloudBridge.saveUserStateToCloud(appState, pdfArchive).catch(err => {
+                window.cloudBridge.saveUserStateToCloud(appState, pdfArchive, activeGoogleUser).catch(err => {
                     console.warn("Bulut veri senkronizasyon uyarısı:", err);
                 });
             }
@@ -1731,6 +1832,7 @@
         // 9. BAŞLATMA
         // ==========================================
         window.addEventListener("DOMContentLoaded", () => {
+            activeGoogleUser = loadSavedGoogleSession();
             loadState();
             updateAuthUI();
             updateLiveClock();
