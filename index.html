@@ -2,1843 +2,686 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POSKIRAN GÜVENLİK - Gece Devriye Takip</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#231d16">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Poskıran Devriye">
+    <title>Poskıran Konfeksiyon - Güvenlikçi Devriye Giriş Terminali</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- jsPDF & AutoTable (Kurumsal PDF Rapor Oluşturucu) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
+            background-color: #f3efe6;
+            color: #2c251d;
+            overflow-x: hidden;
             -webkit-tap-highlight-color: transparent;
-            padding-bottom: env(safe-area-inset-bottom);
         }
-        /* Özel Kaydırma Çubuğu */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+
+        @keyframes flashRedScreen {
+            0%, 100% { background-color: rgba(220, 38, 38, 0.90); }
+            50% { background-color: rgba(127, 29, 29, 0.35); }
         }
-        ::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.1);
+
+        .red-flash-active {
+            animation: flashRedScreen 0.42s infinite ease-in-out;
         }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(156, 163, 175, 0.5);
-            border-radius: 9999px;
-        }
-        .btn-press {
-            transition: transform 0.1s ease, filter 0.15s ease;
-        }
-        .btn-press:active {
-            transform: scale(0.97);
-        }
-        /* Mobil Dokunmatik Hedef Standardı */
+
         .touch-target {
             min-height: 48px;
         }
-        /* Toast Animasyonu */
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translate(-50%, 16px);
-            }
-            to {
-                opacity: 1;
-                transform: translate(-50%, 0);
-            }
-        }
-        .toast-enter {
-            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-        @keyframes redScreenFlash {
-            0%, 100% { background-color: rgba(220, 38, 38, 0.22); box-shadow: inset 0 0 60px rgba(239, 68, 68, 0.65); }
-            50% { background-color: rgba(220, 38, 38, 0.72); box-shadow: inset 0 0 140px rgba(255, 0, 0, 0.95); }
-        }
-        .flash-active {
-            animation: redScreenFlash 0.5s ease-in-out infinite;
-        }
     </style>
 </head>
-<body class="bg-[#18120c] text-white min-h-screen flex flex-col selection:bg-orange-500 selection:text-white">
+<body class="min-h-screen flex flex-col">
 
-    <!-- 3 SANİYELİK KIRMIZI EKRAN FLAŞI & SESLİ UYARI KATMANI -->
-    <div id="red-flash-overlay" class="hidden fixed inset-0 z-[100] pointer-events-none flex flex-col items-center justify-center p-6 flash-active">
-        <div class="bg-black/85 backdrop-blur-md border-2 border-red-500 rounded-3xl px-8 py-6 text-center shadow-2xl max-w-sm w-full">
-            <div class="w-16 h-16 rounded-full bg-red-600/30 border-2 border-red-500 flex items-center justify-center mx-auto mb-3 animate-bounce">
-                <i data-lucide="bell-ring" class="w-8 h-8 text-red-400"></i>
+    <!-- 3 SANİYELİK KIRMIZI FLAŞ UYARI KATMANI -->
+    <div id="red-flash-overlay" class="fixed inset-0 z-50 pointer-events-none hidden flex items-center justify-center p-6">
+        <div class="bg-black/85 backdrop-blur-md border-2 border-red-400 text-white px-7 py-6 rounded-3xl shadow-2xl text-center max-w-md w-full">
+            <div class="w-16 h-16 rounded-full bg-red-600/30 border border-red-400 flex items-center justify-center mx-auto mb-3 animate-pulse">
+                <i data-lucide="shield-alert" class="w-9 h-9 text-red-300"></i>
             </div>
-            <h2 class="text-xl sm:text-2xl font-black tracking-wider text-white uppercase">DEVRİYE KAYDEDİLDİ!</h2>
-            <p id="flash-guard-name" class="text-sm sm:text-base font-bold text-red-300 mt-1">MEHMET SALİH • 23:06</p>
-            <div class="mt-4 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-600 text-white text-xs font-extrabold tracking-wide">
-                <span>Kayıt Onaylanıyor:</span>
-                <span id="flash-countdown" class="text-sm font-black">3</span><span>sn</span>
-            </div>
+            <p class="text-xs uppercase tracking-widest text-red-300 font-bold mb-1">DEVRİYE KAYDI İŞLENİYOR</p>
+            <h2 id="flash-guard-name" class="text-xl sm:text-2xl font-extrabold tracking-tight mb-1">GÜVENLİKÇİ</h2>
+            <p id="flash-slot-label" class="text-sm text-stone-200 font-medium">Saat: --:--</p>
         </div>
     </div>
 
-    <!-- ÜST NAVİGASYON BARI -->
-    <header id="main-header" class="sticky top-0 z-40 bg-[#120d08]/95 backdrop-blur-md border-b border-white/10 transition-colors duration-300">
-        <div class="max-w-5xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2">
-            <div class="flex items-center gap-2.5 shrink-0">
-                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 to-amber-700 flex items-center justify-center shadow-lg shadow-orange-600/20">
-                    <i data-lucide="shield-check" class="w-5 h-5 text-white"></i>
+    <!-- BİLDİRİM TOAST -->
+    <div id="toast-container" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-md pointer-events-none transition-all duration-300 opacity-0 -translate-y-4">
+        <div id="toast-box" class="rounded-2xl px-4 py-3.5 shadow-xl border flex items-center gap-3 bg-emerald-950/95 border-emerald-500/40 text-white">
+            <i id="toast-icon" data-lucide="check-circle-2" class="w-5 h-5 text-emerald-400 shrink-0"></i>
+            <p id="toast-message" class="text-xs sm:text-sm font-bold tracking-wide">TEŞEKKÜRLER KAYIT YAPILDI.</p>
+        </div>
+    </div>
+
+    <!-- ÜST BİLGİ ÇUBUĞU -->
+    <header class="bg-[#231d16] text-[#f5f0e6] border-b border-[#3a3025] sticky top-0 z-30 shadow-md">
+        <div class="max-w-4xl mx-auto px-4 py-3.5 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-700 flex items-center justify-center shadow-inner shrink-0">
+                    <i data-lucide="shield-check" class="w-6 h-6 text-white"></i>
                 </div>
-                <div class="hidden sm:block">
-                    <h1 class="font-bold text-sm tracking-tight leading-none" id="header-title">devriye takip</h1>
-                    <span class="text-[11px] opacity-60 font-medium" id="live-clock">00:00:00</span>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300 border border-orange-500/30">
+                            UYGULAMA 1 • DEVRİYE GİRİŞ TERMİNALİ
+                        </span>
+                    </div>
+                    <h1 class="text-base sm:text-lg font-extrabold tracking-tight text-white mt-0.5">
+                        POSKIRAN KONFEKSİYON
+                    </h1>
                 </div>
             </div>
 
-            <nav class="flex items-center gap-1 sm:gap-1.5 bg-white/5 p-1 rounded-full border border-white/10 overflow-x-auto max-w-full" id="nav-container">
-                <button type="button" onclick="switchTab('giris')" data-tab="giris" class="tab-btn px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all whitespace-nowrap bg-[#d94e1f] text-white shadow cursor-pointer">
-                    GİRİŞ
+            <div class="flex items-center gap-2.5 ml-auto sm:ml-0">
+                <!-- Chrome Ana Ekrana Yükle Butonu -->
+                <button type="button" id="pwa-install-btn" onclick="triggerPwaInstall()" class="hidden touch-target px-3 py-1.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white text-xs font-extrabold shadow-md flex items-center gap-1.5 cursor-pointer transition-transform active:scale-95">
+                    <i data-lucide="download" class="w-4 h-4 shrink-0"></i>
+                    <span>Uygulamayı Yükle</span>
                 </button>
-                <button type="button" onclick="switchTab('cizelge')" data-tab="cizelge" class="tab-btn px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap text-gray-300 hover:text-white cursor-pointer">
-                    Devriye Saati
-                </button>
-                <button type="button" onclick="switchTab('ozet')" data-tab="ozet" class="tab-btn px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap text-gray-300 hover:text-white cursor-pointer">
-                    Gece Devriye Özeti
-                </button>
-            </nav>
 
-            <div class="flex items-center gap-2 shrink-0">
-                <button type="button" onclick="openSettingsModal()" title="Bekçi ve Sistem Ayarları" class="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer" id="settings-btn">
-                    <i data-lucide="settings" class="w-4 h-4"></i>
-                </button>
-                <!-- Google ile Giriş & Hesap Profili (Tek Buton: PG Rozeti) -->
-                <button type="button" id="user-avatar-badge" onclick="handleGoogleAvatarClick()" class="w-9 h-9 rounded-full bg-emerald-700/90 hover:bg-emerald-600 border-2 border-white/20 hover:border-orange-400 flex items-center justify-center text-xs font-extrabold text-white overflow-hidden cursor-pointer shrink-0 shadow-md transition-all" title="Google ile Giriş Yap">
-                    PG
-                </button>
+                <!-- Canlı Bağlantı Durumu -->
+                <div id="sync-status-pill" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 border border-white/15 text-xs font-semibold">
+                    <span id="sync-dot" class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+                    <span id="sync-text" class="text-stone-200">Buluta Bağlanıyor...</span>
+                </div>
+
+                <!-- Canlı Saat -->
+                <div class="px-3 py-1.5 rounded-xl bg-black/30 border border-white/10 text-right">
+                    <div id="live-clock" class="text-sm sm:text-base font-extrabold text-orange-400 tabular-nums leading-tight">--:--:--</div>
+                    <div id="live-date" class="text-[10px] text-stone-400 font-medium">--.--.----</div>
+                </div>
             </div>
         </div>
     </header>
 
-    <!-- HESAP & SENKRONİZASYON DURUM ŞERİDİ -->
-    <div id="account-status-bar" class="bg-black/30 border-b border-white/10 px-4 py-2 text-xs">
-        <div class="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-2">
-            <div class="flex items-center gap-2 text-stone-300">
-                <i data-lucide="cloud" class="w-3.5 h-3.5 text-orange-400 shrink-0"></i>
-                <span id="account-status-text">Kayıtların hesabınızda kalıcı tutulması için sağ üstteki <strong>PG</strong> simgesine basarak Google ile giriş yapın.</span>
-            </div>
-            <span id="cloud-sync-badge" class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-white/10 text-stone-300">
-                Yerel Oturum
-            </span>
-        </div>
-    </div>
+    <!-- ANA İÇERİK -->
+    <main class="flex-1 max-w-4xl w-full mx-auto px-4 py-6 flex flex-col gap-5">
 
-    <!-- ANA İÇERİK ALANI -->
-    <main class="flex-1 w-full">
-
-        <!-- SEKME 1: GİRİŞ -->
-        <section id="tab-giris" class="max-w-3xl mx-auto px-4 py-6 space-y-6">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <p class="text-xs sm:text-sm text-stone-400">Devriye atıldığında ilgili güvenlikçinin butonuna basınız.</p>
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 self-start sm:self-auto">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    08:00 Günlük PDF Kaydı Aktif
-                </span>
-            </div>
-
-            <div class="pt-2">
-                <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-                    <span class="text-xs font-semibold uppercase tracking-wider text-stone-400">Hızlı Devriye Kaydı</span>
-                    <span class="text-xs text-stone-400" id="daily-pdf-status-text">08:00 Günlük PDF Kaydı Bekleniyor</span>
+        <!-- BİLGİ VE BAĞLANTI KARTI -->
+        <section class="bg-white/90 border border-[#e3dac9] rounded-3xl p-4 sm:p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="space-y-1">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
+                        <i data-lucide="radio" class="w-3.5 h-3.5"></i>
+                        Canlı Merkez Senkronizasyonu Aktif
+                    </span>
+                    <span id="active-slot-badge" class="text-xs font-bold text-orange-800 bg-orange-100 border border-orange-200 px-2.5 py-1 rounded-full">
+                        Aktif Saat Dilimi: --:--
+                    </span>
                 </div>
-                <div id="guards-action-buttons" class="flex flex-col items-center gap-3.5 max-w-md mx-auto">
-                    <!-- JS ile doldurulacak -->
-                </div>
-            </div>
-        </section>
-
-        <!-- SEKME 2: DEVRİYE SAATİ -->
-        <section id="tab-cizelge" class="hidden max-w-6xl mx-auto px-4 py-6 space-y-5">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div>
-                    <h2 class="text-xl sm:text-2xl font-bold text-white">Devriye Saati</h2>
-                    <p class="text-xs sm:text-sm text-stone-400">19:00 - 06:00 arası saatlik devriye takip çizelgesi</p>
-                </div>
-                <div class="flex items-center gap-2 text-xs text-stone-400 bg-white/5 px-3 py-1.5 rounded-lg border border-white/10 self-start">
-                    <i data-lucide="clock" class="w-3.5 h-3.5 text-orange-400"></i>
-                    <span>Aktif Saat Dilimi: <strong id="current-slot-badge" class="text-white">--:--</strong></span>
-                </div>
-            </div>
-
-            <div class="bg-[#221a12] border border-white/10 rounded-2xl overflow-hidden shadow-xl">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse min-w-[780px]">
-                        <thead>
-                            <tr class="border-b border-white/10 bg-black/25 text-xs font-semibold text-stone-300">
-                                <th class="py-3.5 px-4 sticky left-0 bg-[#1c150e] z-10 border-r border-white/10 min-w-[160px]">Güvenlikçi</th>
-                                <th class="py-3.5 px-2.5 text-center">19:00</th>
-                                <th class="py-3.5 px-2.5 text-center">20:00</th>
-                                <th class="py-3.5 px-2.5 text-center">21:00</th>
-                                <th class="py-3.5 px-2.5 text-center">22:00</th>
-                                <th class="py-3.5 px-2.5 text-center">23:00</th>
-                                <th class="py-3.5 px-2.5 text-center">00:00</th>
-                                <th class="py-3.5 px-2.5 text-center">01:00</th>
-                                <th class="py-3.5 px-2.5 text-center">02:00</th>
-                                <th class="py-3.5 px-2.5 text-center">03:00</th>
-                                <th class="py-3.5 px-2.5 text-center">04:00</th>
-                                <th class="py-3.5 px-2.5 text-center">05:00</th>
-                                <th class="py-3.5 px-2.5 text-center">06:00</th>
-                            </tr>
-                        </thead>
-                        <tbody id="schedule-table-body" class="divide-y divide-white/5 text-sm">
-                            <!-- JS ile doldurulacak -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-        <!-- SEKME 3: GECE DEVRİYE ÖZETİ -->
-        <section id="tab-ozet" class="hidden min-h-[calc(100vh-4rem)] bg-[#f4efe6] text-[#2c251d] px-4 py-6 sm:py-8">
-            <div class="max-w-5xl mx-auto space-y-6">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div>
-                        <h2 class="text-xl sm:text-2xl font-extrabold text-[#1f1a14] tracking-tight">Gece Devriye Özeti</h2>
-                        <p class="text-xs sm:text-sm text-[#786d5f] mt-0.5" id="summary-date-text">Gece Vardiya Raporu</p>
-                    </div>
-                    <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2">
-                        <button type="button" onclick="triggerEightAmDailyPdfSave(false, true)" class="touch-target col-span-2 sm:col-span-1 px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold shadow-sm transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
-                            <i data-lucide="file-down" class="w-4 h-4 shrink-0"></i>
-                            <span>PDF Olarak Kaydet</span>
-                        </button>
-                        <button type="button" onclick="triggerEightAmDailyPdfSave(true, true)" title="08:00 günlük PDF kayıt akışını şimdi test et" class="touch-target px-3 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs sm:text-sm font-semibold shadow-sm transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
-                            <i data-lucide="clock" class="w-4 h-4 shrink-0"></i>
-                            <span>08:00 Test</span>
-                        </button>
-                        <button type="button" onclick="openResetConfirmModal()" class="touch-target col-span-2 sm:col-span-1 px-3.5 py-2.5 rounded-xl bg-white hover:bg-red-50 text-[#2c251d] hover:text-red-600 border border-[#e2d9c8] text-xs sm:text-sm font-semibold shadow-sm transition-colors flex items-center justify-center cursor-pointer">
-                            Sıfırla
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Saat 08:00 Günlük PDF Kayıt Bilgi Şeridi -->
-                <div class="bg-[#fbf9f5] border border-[#e6dec8] rounded-2xl px-4 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs text-[#5c5245]">
-                    <div class="flex items-start sm:items-center gap-2">
-                        <i data-lucide="file-check-2" class="w-4 h-4 text-orange-600 shrink-0 mt-0.5 sm:mt-0"></i>
-                        <span><strong>08:00 Günlük PDF Kaydı:</strong> Saat <strong>08:00</strong> itibarıyla gece devriye özeti otomatik olarak günlük <strong>PDF</strong> dosyası halinde cihazınıza indirilir ve aşağıdaki arşivde saklanır.</span>
-                    </div>
-                    <div class="flex items-center gap-2 self-start sm:self-auto shrink-0">
-                        <span id="auto-report-status-badge" class="px-2.5 py-1.5 rounded-lg bg-emerald-100 text-emerald-800 font-bold whitespace-nowrap">
-                            08:00 Günlük PDF Aktif
-                        </span>
-                    </div>
-                </div>
-
-                <!-- Kaydedilen PDF Rapor Durum Kartı -->
-                <div id="pdf-share-banner" class="hidden bg-stone-900 text-white rounded-2xl p-4 sm:p-5 shadow-xl border-2 border-emerald-500/50 flex flex-col gap-3.5">
-                    <div class="flex items-start justify-between gap-3">
-                        <div class="flex items-start gap-3">
-                            <div class="p-2.5 bg-emerald-500/20 rounded-xl text-emerald-300 shrink-0">
-                                <i data-lucide="file-check-2" class="w-6 h-6"></i>
-                            </div>
-                            <div>
-                                <div class="flex flex-wrap items-center gap-2">
-                                    <p class="text-sm sm:text-base font-extrabold text-emerald-200" id="pdf-banner-title">Gece Devriye Özeti PDF Kaydedildi</p>
-                                    <span id="pdf-delivery-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-200 border border-emerald-400/30">Günlük PDF Kaydedildi</span>
-                                </div>
-                                <p class="text-xs text-stone-300 mt-1 leading-relaxed" id="pdf-banner-desc">PDF rapor cihazınıza indirildi ve günlük PDF arşivine kaydedildi.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div>
-                        <button type="button" id="download-stored-pdf-btn" onclick="downloadStoredPdf(0)" class="touch-target w-full px-4 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-stone-950 text-xs sm:text-sm font-extrabold shadow-md transition-colors flex items-center justify-center gap-2 cursor-pointer">
-                            <i data-lucide="download" class="w-4 h-4 shrink-0"></i>
-                            <span>Kaydedilen PDF'i İndir</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Saat 08:00 Otomatik PDF Kayıt & E-posta Gönderim Bilgi Şeridi -->
-                <div class="bg-[#fbf9f5] border border-[#e6dec8] rounded-2xl px-4 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs text-[#5c5245]">
-                    <div class="flex items-start sm:items-center gap-2">
-                        <i data-lucide="mail-check" class="w-4 h-4 text-orange-600 shrink-0 mt-0.5 sm:mt-0"></i>
-                        <span><strong>08:00 Otomasyonu:</strong> Saat <strong>08:00</strong>'den itibaren gece devriye özeti <strong>PDF</strong> olarak kaydedilir ve saklanır, ardından <strong id="summary-target-email">E-posta adresi tanımlı değil</strong> adresine otomatik gönderilir.</span>
-                    </div>
-                    <div class="flex items-center gap-2 self-start sm:self-auto shrink-0">
-                        <span id="auto-report-status-badge" class="px-2.5 py-1.5 rounded-lg bg-emerald-100 text-emerald-800 font-bold whitespace-nowrap">
-                            08:00 PDF Kayıt & Mail Aktif
-                        </span>
-                    </div>
-                </div>
-
-                <!-- Kaydedilen PDF Rapor Durum Kartı -->
-                <div id="pdf-share-banner" class="hidden bg-stone-900 text-white rounded-2xl p-4 sm:p-5 shadow-xl border-2 border-emerald-500/50 flex flex-col gap-3.5">
-                    <div class="flex items-start justify-between gap-3">
-                        <div class="flex items-start gap-3">
-                            <div class="p-2.5 bg-emerald-500/20 rounded-xl text-emerald-300 shrink-0">
-                                <i data-lucide="file-check-2" class="w-6 h-6"></i>
-                            </div>
-                            <div>
-                                <div class="flex flex-wrap items-center gap-2">
-                                    <p class="text-sm sm:text-base font-extrabold text-emerald-200" id="pdf-banner-title">Gece Devriye Özeti PDF Kaydedildi</p>
-                                    <span id="email-delivery-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-200 border border-amber-400/30">Arşivde Tutuluyor</span>
-                                </div>
-                                <p class="text-xs text-stone-300 mt-1 leading-relaxed" id="pdf-banner-desc">PDF rapor cihazınıza ve rapor arşivine kaydedildi.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                        <button type="button" id="download-stored-pdf-btn" onclick="downloadStoredPdf(0)" class="touch-target w-full px-4 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-stone-950 text-xs sm:text-sm font-extrabold shadow-md transition-colors flex items-center justify-center gap-2 cursor-pointer">
-                            <i data-lucide="download" class="w-4 h-4 shrink-0"></i>
-                            <span>Kaydedilen PDF'i İndir</span>
-                        </button>
-                        <button type="button" id="retry-email-btn" onclick="sendStoredReportEmail(0, true)" class="touch-target w-full px-4 py-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-stone-950 text-xs sm:text-sm font-extrabold shadow-md transition-colors flex items-center justify-center gap-2 cursor-pointer">
-                            <i data-lucide="send" class="w-4 h-4 shrink-0"></i>
-                            <span>E-postaya Tekrar Gönder</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Üst 3 İstatistik Kartı -->
-                <div class="grid grid-cols-3 gap-3 sm:gap-4">
-                    <div class="bg-[#fbf9f5] border border-[#e6dec8] rounded-2xl p-4 sm:p-5 shadow-xs">
-                        <p class="text-xs sm:text-sm font-medium text-[#786d5f]">Güvenlikçiler</p>
-                        <p class="text-2xl sm:text-3xl font-extrabold text-[#1f1a14] mt-1.5" id="stat-total-guards">3</p>
-                    </div>
-                    <div class="bg-[#fbf9f5] border border-[#e6dec8] rounded-2xl p-4 sm:p-5 shadow-xs">
-                        <p class="text-xs sm:text-sm font-medium text-[#786d5f]">Kaydedilen devriyeler</p>
-                        <p class="text-2xl sm:text-3xl font-extrabold text-[#1f1a14] mt-1.5" id="stat-recorded-patrols">0</p>
-                    </div>
-                    <div class="bg-[#fbf9f5] border border-[#e6dec8] rounded-2xl p-4 sm:p-5 shadow-xs">
-                        <p class="text-xs sm:text-sm font-medium text-[#786d5f]">Boş saatler</p>
-                        <p class="text-2xl sm:text-3xl font-extrabold text-[#1f1a14] mt-1.5" id="stat-empty-slots">36</p>
-                    </div>
-                </div>
-
-                <!-- Güvenlikçi Kartları Grid (Salt okunur kutucuklar) -->
-                <div id="summary-guards-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
-                    <!-- JS ile dinamik doldurulacak -->
-                </div>
-
-                <!-- Saklanan Gece Devriye PDF Arşivi (08:00'den itibaren tutulan kayıtlar) -->
-                <div class="bg-[#fbf9f5] border border-[#e6dec8] rounded-2xl p-4 sm:p-5 shadow-xs space-y-3">
-                    <div class="flex items-center justify-between gap-2">
-                        <div class="flex items-center gap-2">
-                            <i data-lucide="folder-archive" class="w-4 h-4 text-orange-600"></i>
-                            <h3 class="font-bold text-sm sm:text-base text-[#1f1a14]">Kaydedilen Gece Devriye PDF Arşivi</h3>
-                        </div>
-                        <span id="pdf-archive-count" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#f1eadc] text-[#6e6354]">0 PDF</span>
-                    </div>
-                    <div id="pdf-archive-list" class="space-y-2 text-xs">
-                        <!-- JS ile doldurulacak -->
-                    </div>
-                </div>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- TOAST BİLDİRİMİ -->
-    <div id="toast-notification" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-white text-stone-900 px-6 py-3.5 rounded-2xl shadow-2xl border border-stone-200 flex items-center gap-3 min-w-[280px] max-w-[92vw]">
-        <div class="w-7 h-7 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-            <i data-lucide="check" class="w-4 h-4 stroke-[3]"></i>
-        </div>
-        <div>
-            <p id="toast-title" class="text-xs sm:text-sm font-extrabold tracking-wide uppercase text-stone-900">TEŞEKKÜRLER KAYIT YAPILDI.</p>
-            <p id="toast-subtitle" class="text-[11px] text-stone-500 font-medium">Devriye saati çizelgeye işlendi.</p>
-        </div>
-    </div>
-
-    <!-- AYARLAR / BEKÇİ YÖNETİMİ MODALI -->
-    <div id="settings-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-[#231b13] border border-white/15 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl text-white">
-            <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <i data-lucide="sliders" class="w-5 h-5 text-orange-400"></i>
-                    <h3 class="font-bold text-lg">Sistem & Bekçi Ayarları</h3>
-                </div>
-                <button type="button" onclick="closeSettingsModal()" class="p-1.5 rounded-full hover:bg-white/10 text-stone-400 hover:text-white cursor-pointer">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-
-            <div class="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <label class="flex items-center justify-between bg-black/25 border border-white/10 p-3 rounded-xl cursor-pointer">
-                        <div>
-                            <span class="block text-xs font-bold text-white">3 Sn Sesli & Kırmızı Uyarı</span>
-                            <span class="block text-[11px] text-stone-400">Butona basınca alarm & flaş</span>
-                        </div>
-                        <input type="checkbox" id="toggle-sound-alert" onchange="toggleSystemOption('soundEnabled', this.checked)" class="w-4 h-4 accent-orange-500">
-                    </label>
-                    <label class="flex items-center justify-between bg-black/25 border border-white/10 p-3 rounded-xl cursor-pointer">
-                        <div>
-                            <span class="block text-xs font-bold text-white">08:00 Günlük PDF Kaydı</span>
-                            <span class="block text-[11px] text-stone-400">08:00 itibarıyla PDF kaydet</span>
-                        </div>
-                        <input type="checkbox" id="toggle-auto-morning" onchange="toggleSystemOption('autoMorningReport', this.checked)" class="w-4 h-4 accent-orange-500">
-                    </label>
-                </div>
-
-                <div class="space-y-2 pt-2 border-t border-white/10">
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-stone-400">
-                        Yeni Güvenlikçi Ekle
-                    </label>
-                    <div class="flex gap-2">
-                        <input type="text" id="new-guard-name" placeholder="Örn: Ahmet YILMAZ" 
-                            class="flex-1 bg-black/30 border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-orange-500">
-                        <select id="new-guard-color" class="bg-black/40 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none">
-                            <option value="red">Kırmızı</option>
-                            <option value="green">Yeşil</option>
-                            <option value="blue">Mavi</option>
-                            <option value="orange">Turuncu</option>
-                            <option value="purple">Mor</option>
-                            <option value="teal">Turkuaz</option>
-                        </select>
-                        <button type="button" onclick="addNewGuard()" class="px-4 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-xs font-bold transition-colors cursor-pointer">
-                            Ekle
-                        </button>
-                    </div>
-                </div>
-
-                <div class="space-y-2 pt-2 border-t border-white/10">
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-stone-400">
-                        Mevcut Güvenlikçiler
-                    </label>
-                    <div id="settings-guards-list" class="space-y-2">
-                        <!-- JS ile doldurulacak -->
-                    </div>
-                </div>
-            </div>
-
-            <div class="px-6 py-3.5 bg-black/25 border-t border-white/10 flex justify-end">
-                <button type="button" onclick="closeSettingsModal()" class="px-5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-sm font-semibold transition-colors cursor-pointer">
-                    Kapat
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- SIFIRLAMA ONAY MODALI -->
-    <div id="reset-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white text-stone-900 rounded-3xl w-full max-w-sm p-6 shadow-2xl space-y-4">
-            <div class="w-12 h-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center mx-auto">
-                <i data-lucide="rotate-ccw" class="w-6 h-6"></i>
-            </div>
-            <div class="text-center space-y-1.5">
-                <h3 class="text-lg font-bold">Tüm Devriyeler Sıfırlansın mı?</h3>
-                <p class="text-xs text-stone-500 leading-relaxed">
-                    Bu işlem tüm güvenlikçilerin kayıtlı devriye saatlerini temizleyecek ve yeni gece vardiyası için sıfırlayacaktır.
+                <p class="text-xs sm:text-sm text-[#5c5245] leading-relaxed pt-1">
+                    Güvenlik görevlisi kendi adına dokunduğunda devriye saati kaydedilir ve merkez takip sistemine anında aktarılır.
                 </p>
             </div>
-            <div class="grid grid-cols-2 gap-2.5 pt-2">
-                <button type="button" onclick="closeResetConfirmModal()" class="py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-sm font-semibold transition-colors cursor-pointer">
-                    Vazgeç
-                </button>
-                <button type="button" onclick="confirmResetAll()" class="py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition-colors shadow-md shadow-red-600/20 cursor-pointer">
-                    Evet, Sıfırla
-                </button>
-            </div>
-        </div>
-    </div>
+        </section>
 
-    <!-- GOOGLE HESAP & ÇIKIŞ MODALI -->
-    <div id="account-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-[#231b13] border border-white/15 rounded-3xl w-full max-w-sm p-6 shadow-2xl text-white space-y-5">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24">
-                        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"/>
-                        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24Z"/>
-                        <path fill="#FBBC05" d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14Z"/>
-                        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96Z"/>
-                    </svg>
-                    <h3 class="font-bold text-lg">Google Hesabı</h3>
+        <!-- GÜVENLİKÇİ DEVRİYE GİRİŞ BUTONLARI -->
+        <section class="bg-white border border-[#e3dac9] rounded-3xl p-5 sm:p-6 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h2 class="text-base sm:text-lg font-extrabold text-[#231d16]">Güvenlik Görevlisi Devriye Kaydı</h2>
+                    <p class="text-xs text-[#6d6254]">Kayıt yapmak için isminizin bulunduğu kutuya dokunun.</p>
                 </div>
-                <button type="button" onclick="closeAccountModal()" class="p-1.5 rounded-full hover:bg-white/10 text-stone-400 hover:text-white cursor-pointer">
-                    <i data-lucide="x" class="w-5 h-5"></i>
+                <button type="button" onclick="toggleSoundSetting()" id="sound-toggle-btn" class="touch-target px-3 py-2 rounded-xl bg-[#f7f3eb] hover:bg-[#ede5d5] border border-[#e0d6c3] text-xs font-bold text-[#2c251d] flex items-center gap-1.5 cursor-pointer">
+                    <i id="sound-icon" data-lucide="volume-2" class="w-4 h-4 text-orange-600"></i>
+                    <span id="sound-label">Ses Açık</span>
                 </button>
             </div>
-            <div id="account-modal-body" class="space-y-4">
-                <!-- JS ile doldurulacak -->
-            </div>
-        </div>
-    </div>
 
-    <!-- FIREBASE AUTH & FIRESTORE MODÜLÜ (GOOGLE GİRİŞ + HESABA KAYIT) -->
+            <div id="guards-action-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <!-- Dinamik olarak doldurulur -->
+            </div>
+        </section>
+
+        <!-- SON YAPILAN KAYIT BİLGİSİ -->
+        <section class="bg-[#fbf9f5] border border-[#e6dec8] rounded-2xl px-4 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-[#5c5245]">
+            <div class="flex items-center gap-2">
+                <i data-lucide="info" class="w-4 h-4 text-orange-600 shrink-0"></i>
+                <span>Bu terminal yalnızca devriye girişi içindir. Detaylı çizelge, PDF arşiv ve merkez takibi <strong>Gece Devriyesi Özet ve Takip Paneli</strong> üzerinden tüm cihazlardan görüntülenir.</span>
+            </div>
+            <span id="last-recorded-info" class="font-bold text-[#231d16] shrink-0">Son Kayıt: Henüz yok</span>
+        </section>
+    </main>
+
+    <!-- FIREBASE REALTIME CLOUD SYNC & UYGULAMA MANTIĞI -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import {
-            getAuth,
-            GoogleAuthProvider,
-            signInWithPopup,
-            signInWithCustomToken,
-            signInAnonymously,
-            signOut,
-            onAuthStateChanged
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import {
-            getFirestore,
-            doc,
-            setDoc,
-            onSnapshot
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const appId = typeof __app_id !== "undefined" ? __app_id : "default-app-id";
-        let auth = null;
-        let db = null;
-        let currentFirebaseUser = null;
-        let unsubscribeUserDoc = null;
-        let isApplyingRemoteSnapshot = false;
-
-        async function initCloudServices() {
-            try {
-                if (typeof __firebase_config === "undefined" || !__firebase_config) {
-                    window.cloudBridge = { ready: false };
-                    return;
-                }
-                const firebaseConfig = JSON.parse(__firebase_config);
-                const app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
-
-                // İlk oturum başlatma (özel token veya anonim fallback)
-                if (typeof __initial_auth_token !== "undefined" && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else if (!auth.currentUser) {
-                    await signInAnonymously(auth);
-                }
-
-                onAuthStateChanged(auth, (user) => {
-                    currentFirebaseUser = user;
-                    if (typeof window.onCloudAuthChanged === "function") {
-                        window.onCloudAuthChanged(user);
-                    }
-                    subscribeToUserPatrolData(user);
-                });
-
-                window.cloudBridge = {
-                    ready: true,
-                    signInWithGoogle: async () => {
-                        const provider = new GoogleAuthProvider();
-                        provider.setCustomParameters({ prompt: "select_account" });
-                        const result = await signInWithPopup(auth, provider);
-                        return result.user;
-                    },
-                    signOutGoogle: async () => {
-                        await signOut(auth);
-                        await signInAnonymously(auth);
-                    },
-                    saveUserStateToCloud: async (statePayload, archivePayload, overrideProfile = null) => {
-                        if (!db || !currentFirebaseUser || isApplyingRemoteSnapshot) return;
-                        const profileKey = (overrideProfile && overrideProfile.uid) ? overrideProfile.uid : currentFirebaseUser.uid;
-                        const userDocRef = doc(db, "artifacts", appId, "users", profileKey, "patrolState", "main");
-                        await setDoc(userDocRef, {
-                            appState: statePayload,
-                            pdfArchive: (archivePayload || []).slice(0, 15).map(item => ({
-                                id: item.id,
-                                fileName: item.fileName,
-                                createdAt: item.createdAt,
-                                status: item.status || "Günlük PDF Kaydedildi"
-                            })),
-                            ownerEmail: (overrideProfile && overrideProfile.email) || currentFirebaseUser.email || "",
-                            ownerName: (overrideProfile && overrideProfile.displayName) || currentFirebaseUser.displayName || "Güvenlik Görevlisi",
-                            updatedAt: new Date().toISOString()
-                        }, { merge: true });
-                    },
-                    subscribeProfileDoc: (profileUid) => {
-                        if (!db || !currentFirebaseUser || !profileUid) return;
-                        subscribeToUserPatrolData(currentFirebaseUser, profileUid);
-                    }
-                };
-            } catch (err) {
-                console.warn("Bulut senkronizasyonu başlatılamadı:", err);
-                window.cloudBridge = { ready: false };
-            }
-        }
-
-        function subscribeToUserPatrolData(user, customProfileUid = null) {
-            if (unsubscribeUserDoc) {
-                unsubscribeUserDoc();
-                unsubscribeUserDoc = null;
-            }
-            if (!db || !user) return;
-
-            const targetUid = customProfileUid || user.uid;
-            const userDocRef = doc(db, "artifacts", appId, "users", targetUid, "patrolState", "main");
-            unsubscribeUserDoc = onSnapshot(
-                userDocRef,
-                (snap) => {
-                    if (!snap.exists()) {
-                        if (typeof window.pushCurrentLocalToCloud === "function") {
-                            window.pushCurrentLocalToCloud();
-                        }
-                        return;
-                    }
-                    const data = snap.data();
-                    if (data && data.appState && typeof window.applyRemoteCloudState === "function") {
-                        isApplyingRemoteSnapshot = true;
-                        try {
-                            window.applyRemoteCloudState(data.appState, data.pdfArchive || []);
-                        } finally {
-                            isApplyingRemoteSnapshot = false;
-                        }
-                    }
-                },
-                (err) => {
-                    console.warn("Firestore dinleme hatası:", err);
-                }
-            );
-        }
-
-        initCloudServices();
-    </script>
-
-    <script>
-        // ==========================================
-        // 1. SABİTLER VE VARSAYILAN VERİLER
-        // ==========================================
-        const TIME_SLOTS = [
-            "19:00", "20:00", "21:00", "22:00", "23:00", "00:00",
-            "01:00", "02:00", "03:00", "04:00", "05:00", "06:00"
-        ];
-
-        const COLOR_STYLES = {
-            red: { btn: "bg-[#d90404] hover:bg-[#b80303] shadow-red-950/50 text-white" },
-            green: { btn: "bg-[#00b31e] hover:bg-[#009619] shadow-green-950/50 text-white" },
-            blue: { btn: "bg-[#0d6efd] hover:bg-[#0b5ed7] shadow-blue-950/50 text-white" },
-            orange: { btn: "bg-[#ea580c] hover:bg-[#c2410c] shadow-orange-950/50 text-white" },
-            purple: { btn: "bg-[#7e22ce] hover:bg-[#6b21a8] shadow-purple-950/50 text-white" },
-            teal: { btn: "bg-[#0d9488] hover:bg-[#0f766e] shadow-teal-950/50 text-white" }
-        };
-
+        const TIME_SLOTS = ["19:00", "20:00", "21:00", "22:00", "23:00", "00:00", "01:00", "02:00", "03:00", "04:00", "05:00", "06:00"];
         const DEFAULT_GUARDS = [
-            { id: "g1", name: "Kadir", color: "red", records: {}, lastPatrol: null },
-            { id: "g2", name: "Bekçi 2", color: "green", records: {}, lastPatrol: null },
-            { id: "g3", name: "Bekçi 3", color: "blue", records: {}, lastPatrol: null },
-            { id: "g4", name: "Bekçi 4", color: "orange", records: {}, lastPatrol: null }
+            { id: "guard_1", name: "1. Güvenlikçi - Ahmet Yılmaz", logs: {} },
+            { id: "guard_2", name: "2. Güvenlikçi - Mehmet Kaya", logs: {} },
+            { id: "guard_3", name: "3. Güvenlikçi - Mustafa Demir", logs: {} },
+            { id: "guard_4", name: "4. Güvenlikçi - Ali Çelik", logs: {} }
         ];
+        const SHARED_STORAGE_KEY = "poskiran_shared_patrol_state_v1";
 
-        const STORAGE_KEY = "poskiran_devriye_data_v1";
-        const PDF_ARCHIVE_KEY = "poskiran_devriye_pdf_archive_v1";
-
-        let appState = {
+        let state = {
             guards: JSON.parse(JSON.stringify(DEFAULT_GUARDS)),
-            activeTab: "giris",
             soundEnabled: true,
-            autoMorningReport: true,
-            lastAutoReportDate: null
+            targetEmail: "muhasebe@poskirankonfeksiyon.com",
+            mailWebhookUrl: "",
+            lastUpdatedAt: null,
+            lastRecordedText: "Henüz yok"
         };
 
-        let pdfArchive = [];
-        let toastTimeout = null;
-        let flashInterval = null;
-        let flashTimeout = null;
-        let lastGeneratedPdfBlob = null;
-        let lastGeneratedPdfName = null;
-        let lastGeneratedPdfDataUrl = "";
-        let activeGoogleUser = null;
+        let db = null;
+        let auth = null;
+        let sharedDocRef = null;
+        let isCloudReady = false;
+        let isRecording = false;
+        let toastTimer = null;
 
-        // ==========================================
-        // 1.2 GOOGLE HESABI & BULUT SENKRONİZASYONU
-        // ==========================================
-        const GOOGLE_SESSION_KEY = "poskiran_google_session_v1";
-
-        function loadSavedGoogleSession() {
-            try {
-                const raw = localStorage.getItem(GOOGLE_SESSION_KEY);
-                if (!raw) return null;
-                const parsed = JSON.parse(raw);
-                return (parsed && parsed.uid && parsed.email) ? parsed : null;
-            } catch (err) {
-                return null;
-            }
+        function getCurrentPatrolSlot(dateObj = new Date()) {
+            const hour = dateObj.getHours();
+            const hh = String(hour).padStart(2, "0") + ":00";
+            if (TIME_SLOTS.includes(hh)) return hh;
+            return "19:00";
         }
 
-        function saveGoogleSession(profile) {
-            try {
-                if (profile) {
-                    localStorage.setItem(GOOGLE_SESSION_KEY, JSON.stringify(profile));
-                } else {
-                    localStorage.removeItem(GOOGLE_SESSION_KEY);
-                }
-            } catch (err) {
-                console.warn("Google oturum bilgisi kaydedilemedi:", err);
-            }
+        function formatExactTime(dateObj = new Date()) {
+            return dateObj.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
         }
 
-        function getUserScopedStorageKey() {
-            if (activeGoogleUser && activeGoogleUser.uid) {
-                return `${STORAGE_KEY}_${activeGoogleUser.uid}`;
-            }
-            return STORAGE_KEY;
-        }
-
-        function getUserScopedArchiveKey() {
-            if (activeGoogleUser && activeGoogleUser.uid) {
-                return `${PDF_ARCHIVE_KEY}_${activeGoogleUser.uid}`;
-            }
-            return PDF_ARCHIVE_KEY;
-        }
-
-        window.onCloudAuthChanged = function(user) {
-            const isGoogleSignedIn = Boolean(user && !user.isAnonymous && (user.email || user.displayName));
-            if (isGoogleSignedIn) {
-                activeGoogleUser = {
-                    uid: user.uid,
-                    email: user.email || "",
-                    displayName: user.displayName || user.email || "Google Kullanıcısı",
-                    photoURL: user.photoURL || "",
-                    provider: "google"
-                };
-                saveGoogleSession(activeGoogleUser);
+        function updateSyncBadge(connected, labelText) {
+            const dot = document.getElementById("sync-dot");
+            const text = document.getElementById("sync-text");
+            if (!dot || !text) return;
+            if (connected) {
+                dot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400";
+                text.textContent = labelText || "Canlı Bağlı (Tüm Cihazlar)";
             } else {
-                const savedFallback = loadSavedGoogleSession();
-                activeGoogleUser = savedFallback;
-                if (savedFallback && window.cloudBridge && typeof window.cloudBridge.subscribeProfileDoc === "function") {
-                    window.cloudBridge.subscribeProfileDoc(savedFallback.uid);
-                }
-            }
-
-            loadState();
-            renderAll();
-            updateAuthUI();
-        };
-
-        window.applyRemoteCloudState = function(remoteState, remoteArchive) {
-            if (remoteState && typeof remoteState === "object") {
-                if (Array.isArray(remoteState.guards) && remoteState.guards.length > 0) {
-                    appState.guards = remoteState.guards.map((g, idx) => ({
-                        id: g.id || `g_${idx + 1}`,
-                        name: String(g.name || `Bekçi ${idx + 1}`),
-                        color: COLOR_STYLES[g.color] ? g.color : "red",
-                        records: (g.records && typeof g.records === "object") ? g.records : {},
-                        lastPatrol: g.lastPatrol || null
-                    }));
-                }
-                if (typeof remoteState.soundEnabled === "boolean") {
-                    appState.soundEnabled = remoteState.soundEnabled;
-                }
-                if (typeof remoteState.autoMorningReport === "boolean") {
-                    appState.autoMorningReport = remoteState.autoMorningReport;
-                }
-                if (remoteState.lastAutoReportDate) {
-                    appState.lastAutoReportDate = remoteState.lastAutoReportDate;
-                }
-            }
-
-            if (Array.isArray(remoteArchive) && remoteArchive.length > 0) {
-                const existingMap = new Map(pdfArchive.map(item => [item.id, item]));
-                remoteArchive.forEach(rItem => {
-                    const localMatch = existingMap.get(rItem.id);
-                    existingMap.set(rItem.id, {
-                        ...rItem,
-                        pdfDataUrl: (localMatch && localMatch.pdfDataUrl) ? localMatch.pdfDataUrl : ""
-                    });
-                });
-                pdfArchive = Array.from(existingMap.values()).slice(0, 30);
-                savePdfArchiveLocalOnly();
-            }
-
-            saveStateLocalOnly();
-            renderAll();
-        };
-
-        window.pushCurrentLocalToCloud = function() {
-            if (window.cloudBridge && window.cloudBridge.ready && typeof window.cloudBridge.saveUserStateToCloud === "function") {
-                window.cloudBridge.saveUserStateToCloud(appState, pdfArchive, activeGoogleUser).catch(err => {
-                    console.warn("İlk bulut kaydı uyarısı:", err);
-                });
-            }
-        };
-
-        function updateAuthUI() {
-            const avatarBadge = document.getElementById("user-avatar-badge");
-            const statusText = document.getElementById("account-status-text");
-            const syncBadge = document.getElementById("cloud-sync-badge");
-
-            if (activeGoogleUser) {
-                const displayName = activeGoogleUser.displayName || activeGoogleUser.email || "Google Hesabı";
-                const email = activeGoogleUser.email || "";
-
-                if (avatarBadge) {
-                    if (activeGoogleUser.photoURL) {
-                        avatarBadge.innerHTML = `<img src="${escapeHtml(activeGoogleUser.photoURL)}" alt="Profil" referrerpolicy="no-referrer" class="w-full h-full object-cover" onerror="this.parentElement.textContent='GG'">`;
-                    } else {
-                        avatarBadge.textContent = displayName.slice(0, 2).toUpperCase();
-                    }
-                    avatarBadge.title = `${displayName} (${email}) - Hesap Ayarları`;
-                    avatarBadge.className = "w-9 h-9 rounded-full bg-orange-600 hover:bg-orange-500 border-2 border-emerald-400 flex items-center justify-center text-xs font-extrabold text-white overflow-hidden cursor-pointer shrink-0 shadow-md transition-all";
-                }
-
-                if (statusText) {
-                    statusText.innerHTML = `Aktif Hesap: <strong class="text-white">${escapeHtml(displayName)}</strong> (${escapeHtml(email)}) • Kayıtlar bu hesaba kalıcı kaydediliyor.`;
-                }
-                if (syncBadge) {
-                    syncBadge.textContent = "Google Hesabına Kayıtlı";
-                    syncBadge.className = "px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
-                }
-            } else {
-                if (avatarBadge) {
-                    avatarBadge.textContent = "PG";
-                    avatarBadge.title = "Google ile Giriş Yap";
-                    avatarBadge.className = "w-9 h-9 rounded-full bg-emerald-700/90 hover:bg-emerald-600 border-2 border-white/20 hover:border-orange-400 flex items-center justify-center text-xs font-extrabold text-white overflow-hidden cursor-pointer shrink-0 shadow-md transition-all";
-                }
-                if (statusText) {
-                    statusText.innerHTML = `Kayıtların hesabınızda kalıcı tutulması için sağ üstteki <strong>PG</strong> simgesine basarak Google ile giriş yapın.`;
-                }
-                if (syncBadge) {
-                    syncBadge.textContent = "Yerel Oturum";
-                    syncBadge.className = "px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-white/10 text-stone-300";
-                }
+                dot.className = "w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse";
+                text.textContent = labelText || "Yerel Mod / Bağlanıyor";
             }
         }
 
-        // Sağ üstteki PG rozetine basıldığında çalışır
-        async function handleGoogleAvatarClick() {
-            if (activeGoogleUser) {
-                openAccountModal();
-                return;
-            }
-            await startGoogleSignInFlow();
+        function showToast(msg, isError = false) {
+            const container = document.getElementById("toast-container");
+            const box = document.getElementById("toast-box");
+            const textEl = document.getElementById("toast-message");
+            if (!container || !box || !textEl) return;
+
+            textEl.textContent = msg;
+            box.className = isError
+                ? "rounded-2xl px-4 py-3.5 shadow-xl border flex items-center gap-3 bg-red-950/95 border-red-500/50 text-white"
+                : "rounded-2xl px-4 py-3.5 shadow-xl border flex items-center gap-3 bg-emerald-950/95 border-emerald-500/40 text-white";
+
+            container.classList.remove("opacity-0", "-translate-y-4");
+            container.classList.add("opacity-100", "translate-y-0");
+
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                container.classList.remove("opacity-100", "translate-y-0");
+                container.classList.add("opacity-0", "-translate-y-4");
+            }, 3500);
         }
 
-        async function startGoogleSignInFlow() {
-            if (window.cloudBridge && window.cloudBridge.ready && typeof window.cloudBridge.signInWithGoogle === "function") {
-                try {
-                    const user = await window.cloudBridge.signInWithGoogle();
-                    if (user) {
-                        closeAccountModal();
-                        showToast("GOOGLE İLE GİRİŞ YAPILDI", `${user.displayName || user.email} hesabına bağlanıldı.`);
-                        return;
-                    }
-                } catch (err) {
-                    console.warn("Firebase Google Popup hatası, Google hesap giriş modalına geçiliyor:", err);
-                }
-            }
-            // Tarayıcı pop-up veya iFrame alan adı kısıtlaması durumunda doğrudan hesap bağlama modalını aç
-            openAccountModal(true);
-        }
-
-        function submitFallbackGoogleAccount(event) {
-            if (event) event.preventDefault();
-            const emailInput = document.getElementById("fallback-google-email");
-            const nameInput = document.getElementById("fallback-google-name");
-            if (!emailInput) return;
-
-            const email = emailInput.value.trim().toLowerCase();
-            if (!email || !email.includes("@")) {
-                showToast("GEÇERLİ E-POSTA GİRİNİZ", "Lütfen geçerli bir Google (Gmail) adresi yazınız.");
-                return;
-            }
-
-            const rawName = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : email.split("@")[0];
-            const safeUid = "google_" + email.replace(/[^a-z0-9]/g, "_");
-
-            activeGoogleUser = {
-                uid: safeUid,
-                email: email,
-                displayName: rawName,
-                photoURL: "",
-                provider: "google-account"
-            };
-
-            saveGoogleSession(activeGoogleUser);
-            loadState();
-
-            if (window.cloudBridge && window.cloudBridge.ready) {
-                if (typeof window.cloudBridge.subscribeProfileDoc === "function") {
-                    window.cloudBridge.subscribeProfileDoc(safeUid);
-                }
-                if (typeof window.cloudBridge.saveUserStateToCloud === "function") {
-                    window.cloudBridge.saveUserStateToCloud(appState, pdfArchive, activeGoogleUser).catch(() => {});
-                }
-            }
-
-            renderAll();
-            updateAuthUI();
-            closeAccountModal();
-            showToast("HESAP BAĞLANDI", `${email} hesabına giriş yapıldı. Kayıtlarınız bu hesaba kaydedilecek.`);
-        }
-
-        function openAccountModal(showDirectLoginForm = false) {
-            const modal = document.getElementById("account-modal");
-            const body = document.getElementById("account-modal-body");
-            if (!modal || !body) return;
-
-            if (activeGoogleUser) {
-                const name = activeGoogleUser.displayName || "Google Kullanıcısı";
-                const email = activeGoogleUser.email || "";
-                const avatarHtml = activeGoogleUser.photoURL
-                    ? `<img src="${escapeHtml(activeGoogleUser.photoURL)}" alt="Profil" referrerpolicy="no-referrer" class="w-12 h-12 rounded-full object-cover border border-orange-400/50">`
-                    : `<div class="w-12 h-12 rounded-full bg-orange-600 flex items-center justify-center font-bold text-lg">${escapeHtml(name.slice(0, 2).toUpperCase())}</div>`;
-
-                body.innerHTML = `
-                    <div class="flex items-center gap-3 bg-black/30 border border-white/10 p-3.5 rounded-2xl">
-                        ${avatarHtml}
-                        <div class="min-w-0">
-                            <p class="font-bold text-sm text-white truncate">${escapeHtml(name)}</p>
-                            <p class="text-xs text-stone-400 truncate">${escapeHtml(email)}</p>
-                            <span class="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300">Kayıtlar Bu Hesapta Saklanıyor</span>
-                        </div>
-                    </div>
-                    <p class="text-xs text-stone-300 leading-relaxed">
-                        Yaptığınız tüm devriye girişleri, güvenlikçi ayarları ve günlük PDF kayıtları bu Google hesabına bağlı olarak kalıcı tutulur.
-                    </p>
-                    <button type="button" onclick="handleGoogleSignOut()" class="w-full py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-bold transition-colors cursor-pointer">
-                        Hesaptan Çıkış Yap
-                    </button>
-                `;
-            } else {
-                body.innerHTML = `
-                    <p class="text-xs text-stone-300 leading-relaxed">
-                        Google hesabınızla giriş yaptığınızda tüm devriye kayıtları hesabınıza özel olarak kaydedilir ve sonraki girişlerinizde kayıtlı kalır.
-                    </p>
-                    ${!showDirectLoginForm ? `
-                        <button type="button" onclick="startGoogleSignInFlow()" class="w-full py-3 rounded-xl bg-white text-stone-900 hover:bg-stone-100 text-sm font-extrabold flex items-center justify-center gap-2.5 shadow-md transition-colors cursor-pointer">
-                            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                                <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"/>
-                                <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24Z"/>
-                                <path fill="#FBBC05" d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14Z"/>
-                                <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96Z"/>
-                            </svg>
-                            <span>Google ile Oturum Aç</span>
-                        </button>
-                    ` : ""}
-                    <form onsubmit="submitFallbackGoogleAccount(event)" class="space-y-3 pt-2 border-t border-white/10">
-                        <p class="text-[11px] font-semibold text-orange-300">Google Hesap Bilgisi ile Bağlan</p>
-                        <div>
-                            <label class="block text-[11px] text-stone-400 mb-1">Google (Gmail) Adresiniz</label>
-                            <input type="email" id="fallback-google-email" required placeholder="ornek@gmail.com"
-                                class="w-full bg-black/40 border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-orange-500">
-                        </div>
-                        <div>
-                            <label class="block text-[11px] text-stone-400 mb-1">Ad Soyad (İsteğe Bağlı)</label>
-                            <input type="text" id="fallback-google-name" placeholder="Örn: Kadir Yılmaz"
-                                class="w-full bg-black/40 border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-orange-500">
-                        </div>
-                        <button type="submit" class="w-full py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-sm font-bold transition-colors cursor-pointer">
-                            Hesaba Giriş Yap ve Kaydet
-                        </button>
-                    </form>
-                `;
-            }
-
-            modal.classList.remove("hidden");
-            safeRenderIcons();
-        }
-
-        function closeAccountModal() {
-            const modal = document.getElementById("account-modal");
-            if (modal) modal.classList.add("hidden");
-        }
-
-        async function handleGoogleSignOut() {
-            activeGoogleUser = null;
-            saveGoogleSession(null);
-            if (window.cloudBridge && window.cloudBridge.ready && typeof window.cloudBridge.signOutGoogle === "function") {
-                try {
-                    await window.cloudBridge.signOutGoogle();
-                } catch (err) {
-                    console.warn("Çıkış uyarısı:", err);
-                }
-            }
-            loadState();
-            renderAll();
-            updateAuthUI();
-            closeAccountModal();
-            showToast("OTURUM KAPATILDI", "Google hesabından çıkış yapıldı.");
-        }
-
-        // ==========================================
-        // 1.5 YARDIMCI PDF ARŞİV FONKSİYONLARI
-        // ==========================================
-        function loadPdfArchive() {
-            try {
-                const raw = localStorage.getItem(getUserScopedArchiveKey());
-                if (!raw) {
-                    pdfArchive = [];
-                    return;
-                }
-                const parsed = JSON.parse(raw);
-                pdfArchive = Array.isArray(parsed) ? parsed : [];
-            } catch (err) {
-                console.warn("PDF arşivi okuma uyarısı:", err);
-                pdfArchive = [];
-            }
-        }
-
-        function savePdfArchiveLocalOnly() {
-            const archiveKey = getUserScopedArchiveKey();
-            try {
-                localStorage.setItem(archiveKey, JSON.stringify(pdfArchive.slice(0, 30)));
-            } catch (err) {
-                console.warn("PDF arşivi kaydetme uyarısı (depolama sınırı):", err);
-                try {
-                    const lightArchive = pdfArchive.slice(0, 10).map(item => ({
-                        id: item.id,
-                        fileName: item.fileName,
-                        createdAt: item.createdAt,
-                        status: item.status,
-                        pdfDataUrl: item.pdfDataUrl || ""
-                    }));
-                    localStorage.setItem(archiveKey, JSON.stringify(lightArchive));
-                    pdfArchive = lightArchive;
-                } catch (innerErr) {
-                    console.warn("Yedek arşiv kaydı başarısız:", innerErr);
-                }
-            }
-        }
-
-        function savePdfArchive() {
-            savePdfArchiveLocalOnly();
-            if (window.cloudBridge && window.cloudBridge.ready && typeof window.cloudBridge.saveUserStateToCloud === "function") {
-                window.cloudBridge.saveUserStateToCloud(appState, pdfArchive, activeGoogleUser).catch(err => {
-                    console.warn("Bulut arşiv senkronizasyon uyarısı:", err);
-                });
-            }
-        }
-
-        function addPdfToArchive(fileName, pdfDataUrl, now = new Date()) {
-            const entry = {
-                id: `pdf_${Date.now()}`,
-                fileName,
-                createdAt: `${getFormattedDate(now)} ${getFormattedTime(now)}`,
-                status: "Günlük PDF Kaydedildi",
-                pdfDataUrl: pdfDataUrl || ""
-            };
-            pdfArchive.unshift(entry);
-            savePdfArchive();
-            return entry;
-        }
-
-        function downloadStoredPdf(index = 0) {
-            const entry = pdfArchive[index];
-            if (entry && entry.pdfDataUrl) {
-                const link = document.createElement("a");
-                link.href = entry.pdfDataUrl;
-                link.download = entry.fileName || "Gece_Devriye_Ozeti.pdf";
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                showToast("PDF İNDİRİLDİ", `${entry.fileName} cihazınıza indirildi.`);
-                return;
-            }
-            if (lastGeneratedPdfBlob && lastGeneratedPdfName) {
-                const url = URL.createObjectURL(lastGeneratedPdfBlob);
-                const link = document.createElement("a");
-                link.href = url;
-                link.download = lastGeneratedPdfName;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                setTimeout(() => URL.revokeObjectURL(url), 2000);
-                showToast("PDF İNDİRİLDİ", `${lastGeneratedPdfName} cihazınıza indirildi.`);
-            } else {
-                showToast("PDF BULUNAMADI", "Önce bir PDF raporu oluşturunuz.");
-            }
-        }
-
-        // ==========================================
-        // 2. BAŞLATMA VE DEPOLAMA YÖNETİMİ
-        // ==========================================
-        function getFormattedTime(date = new Date()) {
-            const hh = String(date.getHours()).padStart(2, "0");
-            const mm = String(date.getMinutes()).padStart(2, "0");
-            return `${hh}:${mm}`;
-        }
-
-        function getFormattedDate(date = new Date()) {
-            return date.toLocaleDateString("tr-TR", {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric"
-            });
-        }
-
-        function resolveTargetSlot(guard, now = new Date()) {
-            const hourStr = String(now.getHours()).padStart(2, "0") + ":00";
-            if (TIME_SLOTS.includes(hourStr)) {
-                return hourStr;
-            }
-            const firstEmpty = TIME_SLOTS.find(slot => !guard.records[slot]);
-            return firstEmpty || "19:00";
-        }
-
-        function updateLiveClock() {
-            const now = new Date();
-            const hh = String(now.getHours()).padStart(2, "0");
-            const mm = String(now.getMinutes()).padStart(2, "0");
-            const ss = String(now.getSeconds()).padStart(2, "0");
-
-            const clockEl = document.getElementById("live-clock");
-            if (clockEl) clockEl.textContent = `${hh}:${mm}:${ss}`;
-
-            const slotBadge = document.getElementById("current-slot-badge");
-            if (slotBadge) {
-                const currentHourSlot = `${hh}:00`;
-                slotBadge.textContent = TIME_SLOTS.includes(currentHourSlot) ? currentHourSlot : "Vardiya Dışı";
-            }
-
-            checkEightAmDailyPdfSave(now);
-        }
-
-        function saveStateLocalOnly() {
-            try {
-                localStorage.setItem(getUserScopedStorageKey(), JSON.stringify(appState));
-            } catch (err) {
-                console.warn("Veri kaydetme uyarısı:", err);
-            }
-        }
-
-        function saveState() {
-            saveStateLocalOnly();
-            if (window.cloudBridge && window.cloudBridge.ready && typeof window.cloudBridge.saveUserStateToCloud === "function") {
-                window.cloudBridge.saveUserStateToCloud(appState, pdfArchive, activeGoogleUser).catch(err => {
-                    console.warn("Bulut veri senkronizasyon uyarısı:", err);
-                });
-            }
-        }
-
-        function loadState() {
-            loadPdfArchive();
-            try {
-                const raw = localStorage.getItem(getUserScopedStorageKey());
-                if (!raw) return;
-                const parsed = JSON.parse(raw);
-
-                if (parsed && typeof parsed === "object") {
-                    if (Array.isArray(parsed.guards) && parsed.guards.length > 0) {
-                        appState.guards = parsed.guards.map((g, idx) => ({
-                            id: g.id || `g_${idx + 1}`,
-                            name: String(g.name || `Bekçi ${idx + 1}`),
-                            color: COLOR_STYLES[g.color] ? g.color : "red",
-                            records: (g.records && typeof g.records === "object") ? g.records : {},
-                            lastPatrol: g.lastPatrol || null
-                        }));
-                    }
-
-                    if (["giris", "cizelge", "ozet"].includes(parsed.activeTab)) {
-                        appState.activeTab = parsed.activeTab;
-                    }
-                    if (typeof parsed.soundEnabled === "boolean") {
-                        appState.soundEnabled = parsed.soundEnabled;
-                    }
-                    if (typeof parsed.autoMorningReport === "boolean") {
-                        appState.autoMorningReport = parsed.autoMorningReport;
-                    }
-                    if (parsed.lastAutoReportDate) {
-                        appState.lastAutoReportDate = parsed.lastAutoReportDate;
-                    }
-                }
-            } catch (err) {
-                console.warn("Veri okuma uyarısı:", err);
-            }
-
-            if (pdfArchive.length > 0) {
-                lastGeneratedPdfName = pdfArchive[0].fileName;
-                lastGeneratedPdfDataUrl = pdfArchive[0].pdfDataUrl || "";
-            }
-        }
-
-        function safeRenderIcons() {
-            try {
-                if (window.lucide && typeof window.lucide.createIcons === "function") {
-                    window.lucide.createIcons();
-                }
-            } catch (err) {
-                console.warn("İkon oluşturma uyarısı:", err);
-            }
-        }
-
-        function checkEightAmDailyPdfSave(now) {
-            if (!appState.autoMorningReport) return;
-
-            const hours = now.getHours();
-            const todayKey = getFormattedDate(now);
-
-            // Saat 08:00 itibarıyla (08:00 ve sonrası) gün içinde henüz PDF kaydedilmediyse günlük PDF olarak kaydet
-            if (hours >= 8 && appState.lastAutoReportDate !== todayKey) {
-                appState.lastAutoReportDate = todayKey;
-                saveState();
-                triggerEightAmDailyPdfSave(false, false);
-            }
-        }
-
-        // ==========================================
-        // 3. SESLİ UYARI & 3 SANİYELİK KIRMIZI FLAŞ
-        // ==========================================
-        function playPatrolAlertSound() {
-            if (!appState.soundEnabled) return;
+        function playThreeSecondAlertSound() {
+            if (!state.soundEnabled) return;
             try {
                 const AudioCtx = window.AudioContext || window.webkitAudioContext;
                 if (!AudioCtx) return;
                 const ctx = new AudioCtx();
                 const now = ctx.currentTime;
 
-                for (let i = 0; i < 3; i++) {
+                for (let i = 0; i < 6; i++) {
                     const osc = ctx.createOscillator();
                     const gain = ctx.createGain();
                     osc.type = "sine";
-                    osc.frequency.setValueAtTime(880, now + i * 0.9);
-                    osc.frequency.exponentialRampToValueAtTime(1180, now + i * 0.9 + 0.35);
+                    osc.frequency.setValueAtTime(i % 2 === 0 ? 880 : 660, now + i * 0.48);
 
-                    gain.gain.setValueAtTime(0.001, now + i * 0.9);
-                    gain.gain.exponentialRampToValueAtTime(0.35, now + i * 0.9 + 0.05);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.9 + 0.45);
+                    gain.gain.setValueAtTime(0.001, now + i * 0.48);
+                    gain.gain.exponentialRampToValueAtTime(0.24, now + i * 0.48 + 0.05);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.48 + 0.42);
 
                     osc.connect(gain);
                     gain.connect(ctx.destination);
-                    osc.start(now + i * 0.9);
-                    osc.stop(now + i * 0.9 + 0.48);
+                    osc.start(now + i * 0.48);
+                    osc.stop(now + i * 0.48 + 0.44);
                 }
-            } catch (err) {
-                console.warn("Sesli uyarı çalınamadı:", err);
+            } catch (e) {
+                console.warn("Ses çalınamadı:", e);
             }
         }
 
-        function triggerThreeSecondRedFlash(guardName, exactTime, onCompleteCallback) {
+        function triggerThreeSecondRedFlash(guardName, slotLabel) {
             const overlay = document.getElementById("red-flash-overlay");
             const nameEl = document.getElementById("flash-guard-name");
-            const countdownEl = document.getElementById("flash-countdown");
-            if (!overlay) {
-                if (typeof onCompleteCallback === "function") onCompleteCallback();
-                return;
-            }
+            const slotEl = document.getElementById("flash-slot-label");
+            if (!overlay) return;
 
-            if (flashInterval) clearInterval(flashInterval);
-            if (flashTimeout) clearTimeout(flashTimeout);
-
-            if (nameEl) nameEl.textContent = `${guardName} • Saat ${exactTime}`;
-            let remaining = 3;
-            if (countdownEl) countdownEl.textContent = remaining;
+            if (nameEl) nameEl.textContent = guardName;
+            if (slotEl) slotEl.textContent = `Devriye Saati: ${slotLabel}`;
 
             overlay.classList.remove("hidden");
-            safeRenderIcons();
-            playPatrolAlertSound();
+            overlay.classList.add("red-flash-active");
 
-            flashInterval = setInterval(() => {
-                remaining -= 1;
-                if (remaining > 0 && countdownEl) {
-                    countdownEl.textContent = remaining;
-                }
-            }, 1000);
-
-            flashTimeout = setTimeout(() => {
-                clearInterval(flashInterval);
-                overlay.classList.add("hidden");
-                if (typeof onCompleteCallback === "function") {
-                    onCompleteCallback();
-                }
-            }, 3000);
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    overlay.classList.remove("red-flash-active");
+                    overlay.classList.add("hidden");
+                    resolve();
+                }, 3000);
+            });
         }
 
-        // ==========================================
-        // 4. DEVRİYE KAYIT İŞLEMİ
-        // ==========================================
-        function recordPatrol(guardId) {
-            const guard = appState.guards.find(g => g.id === guardId);
+        function saveLocalMirror() {
+            try {
+                localStorage.setItem(SHARED_STORAGE_KEY, JSON.stringify(state));
+            } catch (e) {
+                // Depolama kısıtlaması durumunda yoksay
+            }
+        }
+
+        function loadLocalMirror() {
+            try {
+                const raw = localStorage.getItem(SHARED_STORAGE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (parsed && Array.isArray(parsed.guards)) {
+                        state = { ...state, ...parsed };
+                    }
+                }
+            } catch (e) {
+                // Hata durumunda varsayılan state korunur
+            }
+        }
+
+        async function persistSharedState() {
+            state.lastUpdatedAt = new Date().toISOString();
+            saveLocalMirror();
+
+            if (isCloudReady && sharedDocRef) {
+                try {
+                    await setDoc(sharedDocRef, {
+                        guards: state.guards,
+                        soundEnabled: state.soundEnabled,
+                        targetEmail: state.targetEmail || "muhasebe@poskirankonfeksiyon.com",
+                        mailWebhookUrl: state.mailWebhookUrl || "",
+                        lastUpdatedAt: state.lastUpdatedAt,
+                        lastRecordedText: state.lastRecordedText || "Henüz yok"
+                    }, { merge: true });
+                } catch (err) {
+                    console.error("Bulut kayıt hatası:", err);
+                }
+            }
+        }
+
+        window.recordPatrolEntry = async function (guardId) {
+            if (isRecording) return;
+            const guard = state.guards.find(g => g.id === guardId);
             if (!guard) return;
 
+            isRecording = true;
+            renderGuardsGrid();
+
             const now = new Date();
-            const exactTime = getFormattedTime(now);
-            const targetSlot = resolveTargetSlot(guard, now);
+            const slot = getCurrentPatrolSlot(now);
+            const exactTime = formatExactTime(now);
 
-            guard.records[targetSlot] = exactTime;
-            guard.lastPatrol = exactTime;
+            playThreeSecondAlertSound();
+            await triggerThreeSecondRedFlash(guard.name, `${slot} (${exactTime})`);
 
-            saveState();
-            renderAll();
+            if (!guard.logs) guard.logs = {};
+            guard.logs[slot] = exactTime;
+            state.lastRecordedText = `${guard.name} • ${slot} (${exactTime})`;
 
-            // Sadece kayıt yapılır; 3 sn sesli & kırmızı flaş aktif olur
-            triggerThreeSecondRedFlash(guard.name, exactTime, () => {
-                showToast("TEŞEKKÜRLER KAYIT YAPILDI.", `${guard.name} • Saat: ${exactTime} (${targetSlot} dilimi)`);
-            });
+            await persistSharedState();
+
+            isRecording = false;
+            renderGuardsGrid();
+            updateLastRecordedUI();
+            showToast("TEŞEKKÜRLER KAYIT YAPILDI.");
+        };
+
+        window.toggleSoundSetting = async function () {
+            state.soundEnabled = !state.soundEnabled;
+            updateSoundButtonUI();
+            await persistSharedState();
+        };
+
+        function updateSoundButtonUI() {
+            const label = document.getElementById("sound-label");
+            const icon = document.getElementById("sound-icon");
+            if (label) label.textContent = state.soundEnabled ? "Ses Açık" : "Ses Kapalı";
+            if (icon) icon.setAttribute("data-lucide", state.soundEnabled ? "volume-2" : "volume-x");
+            if (window.lucide) window.lucide.createIcons();
         }
 
-        // ==========================================
-        // 5. GÜNLÜK PDF OLUŞTURMA VE KAYDETME
-        // ==========================================
-        function normalizeTurkishForPdf(text) {
-            const map = {
-                "Ç": "C", "ç": "c",
-                "Ğ": "G", "ğ": "g",
-                "İ": "I", "ı": "i",
-                "Ö": "O", "ö": "o",
-                "Ş": "S", "ş": "s",
-                "Ü": "U", "ü": "u"
-            };
-            return String(text || "").replace(/[ÇçĞğİıÖöŞşÜü]/g, ch => map[ch] || ch);
+        function updateLastRecordedUI() {
+            const el = document.getElementById("last-recorded-info");
+            if (el) el.textContent = `Son Kayıt: ${state.lastRecordedText || "Henüz yok"}`;
         }
 
-        function generateNightSummaryPdf(now = new Date()) {
-            const dateStr = getFormattedDate(now);
-            const timeStr = getFormattedTime(now);
-            const safeDateFile = dateStr.replace(/\./g, "-");
-            const fileName = `Gece_Devriye_Ozeti_${safeDateFile}.pdf`;
-
-            try {
-                if (!window.jspdf || !window.jspdf.jsPDF) {
-                    throw new Error("jsPDF kütüphanesi yüklenemedi.");
-                }
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-
-                doc.setFillColor(24, 18, 12);
-                doc.rect(0, 0, 210, 36, "F");
-
-                doc.setTextColor(255, 255, 255);
-                doc.setFont("helvetica", "bold");
-                doc.setFontSize(18);
-                doc.text("POSKIRAN GUVENLIK", 14, 15);
-
-                doc.setFontSize(11);
-                doc.setFont("helvetica", "normal");
-                doc.setTextColor(245, 158, 11);
-                doc.text("GECE DEVRIYE OZETI VE VARDIYA RAPORU (08:00)", 14, 23);
-
-                doc.setTextColor(220, 220, 220);
-                doc.setFontSize(8.5);
-                doc.text(`Tarih: ${dateStr}  |  Kayit Saati: ${timeStr}`, 14, 30);
-
-                const totalGuards = appState.guards.length;
-                const totalSlots = totalGuards * TIME_SLOTS.length;
-                let totalDone = 0;
-                appState.guards.forEach(g => {
-                    TIME_SLOTS.forEach(s => { if (g.records[s]) totalDone++; });
-                });
-                const totalEmpty = totalSlots - totalDone;
-
-                doc.setFillColor(248, 245, 240);
-                doc.setDrawColor(225, 215, 200);
-                doc.roundedRect(14, 42, 182, 18, 3, 3, "FD");
-
-                doc.setTextColor(40, 40, 40);
-                doc.setFont("helvetica", "bold");
-                doc.setFontSize(10);
-                doc.text(`Toplam Guvenlikci: ${totalGuards}`, 22, 53);
-                doc.setTextColor(5, 122, 85);
-                doc.text(`Tamamlanan Devriye: ${totalDone}`, 80, 53);
-                doc.setTextColor(185, 28, 28);
-                doc.text(`Bos Saat Dilimi: ${totalEmpty}`, 145, 53);
-
-                const tableHead = [["Guvenlikci", ...TIME_SLOTS, "Toplam"]];
-                const tableBody = appState.guards.map(guard => {
-                    const doneCount = TIME_SLOTS.filter(s => guard.records[s]).length;
-                    const rowCells = TIME_SLOTS.map(s => guard.records[s] ? guard.records[s] : "-");
-                    return [normalizeTurkishForPdf(guard.name), ...rowCells, `${doneCount}/${TIME_SLOTS.length}`];
-                });
-
-                if (typeof doc.autoTable === "function") {
-                    doc.autoTable({
-                        startY: 65,
-                        head: tableHead,
-                        body: tableBody,
-                        theme: "grid",
-                        styles: {
-                            font: "helvetica",
-                            fontSize: 7.2,
-                            cellPadding: 1.8,
-                            halign: "center",
-                            valign: "middle",
-                            lineColor: [215, 208, 198],
-                            lineWidth: 0.2
-                        },
-                        headStyles: {
-                            fillColor: [36, 28, 20],
-                            textColor: [255, 255, 255],
-                            fontStyle: "bold"
-                        },
-                        columnStyles: {
-                            0: { halign: "left", fontStyle: "bold", cellWidth: 30 },
-                            13: { fontStyle: "bold", textColor: [5, 122, 85] }
-                        },
-                        didParseCell: function (data) {
-                            if (data.section === "body" && data.column.index >= 1 && data.column.index <= 12) {
-                                if (data.cell.raw !== "-") {
-                                    data.cell.styles.fillColor = [232, 245, 233];
-                                    data.cell.styles.textColor = [4, 120, 87];
-                                    data.cell.styles.fontStyle = "bold";
-                                } else {
-                                    data.cell.styles.textColor = [160, 160, 160];
-                                }
-                            }
-                        }
-                    });
-                }
-
-                let yPos = (doc.lastAutoTable && doc.lastAutoTable.finalY) ? doc.lastAutoTable.finalY + 10 : 105;
-
-                appState.guards.forEach((guard) => {
-                    if (yPos > 245) {
-                        doc.addPage();
-                        yPos = 20;
-                    }
-
-                    const completedCount = TIME_SLOTS.filter(s => guard.records[s]).length;
-                    const emptyCount = TIME_SLOTS.length - completedCount;
-
-                    doc.setFillColor(36, 28, 20);
-                    doc.roundedRect(14, yPos, 182, 9.5, 2, 2, "F");
-                    doc.setTextColor(255, 255, 255);
-                    doc.setFont("helvetica", "bold");
-                    doc.setFontSize(10.5);
-                    doc.text(normalizeTurkishForPdf(guard.name), 18, yPos + 6.4);
-
-                    doc.setFontSize(8.5);
-                    doc.setTextColor(253, 224, 71);
-                    doc.text(`Tamamlanan: ${completedCount}  |  Bos: ${emptyCount}`, 145, yPos + 6.4);
-
-                    yPos += 12;
-
-                    const colWidth = 29.5;
-                    const rowHeight = 13;
-
-                    TIME_SLOTS.forEach((slot, idx) => {
-                        const col = idx % 6;
-                        const row = Math.floor(idx / 6);
-                        const x = 14 + col * (colWidth + 1);
-                        const y = yPos + row * (rowHeight + 1.5);
-                        const recTime = guard.records[slot];
-
-                        if (recTime) {
-                            doc.setFillColor(232, 245, 233);
-                            doc.setDrawColor(74, 222, 128);
-                        } else {
-                            doc.setFillColor(245, 242, 236);
-                            doc.setDrawColor(214, 211, 209);
-                        }
-
-                        doc.roundedRect(x, y, colWidth, rowHeight, 1.5, 1.5, "FD");
-
-                        doc.setFont("helvetica", "bold");
-                        doc.setFontSize(8);
-                        doc.setTextColor(60, 60, 60);
-                        doc.text(slot, x + colWidth / 2, y + 4.8, { align: "center" });
-
-                        doc.setFontSize(8.5);
-                        if (recTime) {
-                            doc.setTextColor(4, 120, 87);
-                            doc.text(recTime, x + colWidth / 2, y + 10.2, { align: "center" });
-                        } else {
-                            doc.setFont("helvetica", "normal");
-                            doc.setTextColor(150, 150, 150);
-                            doc.text("Bos", x + colWidth / 2, y + 10.2, { align: "center" });
-                        }
-                    });
-
-                    yPos += (rowHeight * 2) + 8;
-                });
-
-                doc.setFont("helvetica", "italic");
-                doc.setFontSize(8);
-                doc.setTextColor(130, 130, 130);
-                doc.text(`Poskiran Guvenlik Gece Devriye Takip Sistemi - Gunluk PDF Raporu`, 14, 287);
-
-                lastGeneratedPdfBlob = doc.output("blob");
-                lastGeneratedPdfName = fileName;
-                lastGeneratedPdfDataUrl = doc.output("datauristring");
-                doc.save(fileName);
-            } catch (err) {
-                console.warn("PDF oluşturma uyarısı:", err);
-                const fallbackText = `POSKIRAN GUVENLIK - GECE DEVRIYE OZETI (${dateStr})\n` +
-                    appState.guards.map(g => `${g.name}: ${TIME_SLOTS.filter(s => g.records[s]).map(s => `${s}(${g.records[s]})`).join(", ") || "Kayit yok"}`).join("\n");
-                lastGeneratedPdfBlob = new Blob([fallbackText], { type: "application/pdf" });
-                lastGeneratedPdfName = fileName;
-                lastGeneratedPdfDataUrl = "";
+        const GUARD_BUTTON_PALETTES = [
+            {
+                card: "bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100/80 border-blue-400 hover:border-blue-600 hover:from-blue-100 hover:to-indigo-100",
+                avatar: "bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-sm",
+                title: "text-blue-950",
+                sub: "text-blue-800",
+                badge: "bg-blue-600 text-white",
+                total: "text-blue-900"
+            },
+            {
+                card: "bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100/80 border-amber-400 hover:border-orange-600 hover:from-amber-100 hover:to-orange-100",
+                avatar: "bg-gradient-to-br from-orange-500 to-amber-600 text-white shadow-sm",
+                title: "text-amber-950",
+                sub: "text-amber-800",
+                badge: "bg-orange-600 text-white",
+                total: "text-amber-900"
+            },
+            {
+                card: "bg-gradient-to-br from-purple-50 via-fuchsia-50 to-purple-100/80 border-purple-400 hover:border-purple-600 hover:from-purple-100 hover:to-fuchsia-100",
+                avatar: "bg-gradient-to-br from-purple-600 to-fuchsia-700 text-white shadow-sm",
+                title: "text-purple-950",
+                sub: "text-purple-800",
+                badge: "bg-purple-600 text-white",
+                total: "text-purple-900"
+            },
+            {
+                card: "bg-gradient-to-br from-cyan-50 via-teal-50 to-cyan-100/80 border-cyan-400 hover:border-teal-600 hover:from-cyan-100 hover:to-teal-100",
+                avatar: "bg-gradient-to-br from-cyan-600 to-teal-700 text-white shadow-sm",
+                title: "text-cyan-950",
+                sub: "text-cyan-800",
+                badge: "bg-teal-600 text-white",
+                total: "text-cyan-900"
+            },
+            {
+                card: "bg-gradient-to-br from-rose-50 via-pink-50 to-rose-100/80 border-rose-400 hover:border-rose-600 hover:from-rose-100 hover:to-pink-100",
+                avatar: "bg-gradient-to-br from-rose-600 to-pink-700 text-white shadow-sm",
+                title: "text-rose-950",
+                sub: "text-rose-800",
+                badge: "bg-rose-600 text-white",
+                total: "text-rose-900"
             }
+        ];
 
-            return fileName;
-        }
-
-        function triggerEightAmDailyPdfSave(isTest = false, isManualClick = false) {
-            const now = new Date();
-            const fileName = generateNightSummaryPdf(now);
-
-            addPdfToArchive(
-                fileName,
-                lastGeneratedPdfDataUrl,
-                now
-            );
-
-            const pdfBanner = document.getElementById("pdf-share-banner");
-            const pdfBannerTitle = document.getElementById("pdf-banner-title");
-            const pdfBannerDesc = document.getElementById("pdf-banner-desc");
-
-            if (pdfBanner) {
-                pdfBanner.classList.remove("hidden");
-                if (pdfBannerTitle) pdfBannerTitle.textContent = `${fileName} Kaydedildi`;
-                if (pdfBannerDesc) {
-                    pdfBannerDesc.textContent = `Gece devriye özeti PDF olarak cihazınıza indirildi ve günlük PDF arşivinde saklandı.`;
-                }
-            }
-
-            renderAll();
-
-            showToast(
-                isTest ? "08:00 PDF TESTİ TAMAMLANDI" : (isManualClick ? "PDF KAYDEDİLDİ" : "SAAT 08:00 GÜNLÜK PDF KAYDI"),
-                `${fileName} PDF olarak kaydedildi.`
-            );
-        }
-
-        // ==========================================
-        // 6. ARAYÜZ RENDER FONKSİYONLARI
-        // ==========================================
-        function switchTab(tabName) {
-            if (!["giris", "cizelge", "ozet"].includes(tabName)) return;
-            appState.activeTab = tabName;
-            saveState();
-
-            document.querySelectorAll(".tab-btn").forEach(btn => {
-                const isSelected = btn.getAttribute("data-tab") === tabName;
-                if (isSelected) {
-                    btn.className = "tab-btn px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all whitespace-nowrap bg-[#d94e1f] text-white shadow cursor-pointer";
-                } else {
-                    btn.className = "tab-btn px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap text-gray-300 hover:text-white cursor-pointer";
-                }
-            });
-
-            document.getElementById("tab-giris").classList.toggle("hidden", tabName !== "giris");
-            document.getElementById("tab-cizelge").classList.toggle("hidden", tabName !== "cizelge");
-            document.getElementById("tab-ozet").classList.toggle("hidden", tabName !== "ozet");
-
-            const header = document.getElementById("main-header");
-            if (header) {
-                if (tabName === "ozet") {
-                    header.className = "sticky top-0 z-40 bg-[#f4efe6]/95 backdrop-blur-md border-b border-[#e2d9c8] text-[#1f1a14] transition-colors duration-300";
-                } else {
-                    header.className = "sticky top-0 z-40 bg-[#120d08]/95 backdrop-blur-md border-b border-white/10 text-white transition-colors duration-300";
-                }
-            }
-
-            renderAll();
-        }
-
-        function renderGuardsActionButtons() {
-            const container = document.getElementById("guards-action-buttons");
-            const statusText = document.getElementById("daily-pdf-status-text");
-            if (statusText) {
-                const todayKey = getFormattedDate(new Date());
-                const isSavedToday = appState.lastAutoReportDate === todayKey;
-                statusText.textContent = isSavedToday
-                    ? `Bugünkü PDF Kaydedildi (${todayKey})`
-                    : "08:00 Günlük PDF Kaydı Bekleniyor";
-            }
+        function renderGuardsGrid() {
+            const container = document.getElementById("guards-action-grid");
             if (!container) return;
 
-            container.innerHTML = appState.guards.map(guard => {
-                const style = COLOR_STYLES[guard.color] || COLOR_STYLES.red;
-                const badgeHtml = guard.lastPatrol
-                    ? `<span class="px-2.5 py-0.5 rounded-full bg-black/25 text-xs font-extrabold tracking-wide">${escapeHtml(guard.lastPatrol)}</span>`
-                    : `<span class="px-2.5 py-0.5 rounded-full bg-black/20 text-[11px] font-semibold opacity-90">Kayıt Bekliyor</span>`;
+            const currentSlot = getCurrentPatrolSlot(new Date());
+            container.innerHTML = state.guards.map((guard, idx) => {
+                const loggedAt = guard.logs ? guard.logs[currentSlot] : null;
+                const totalDone = guard.logs ? Object.keys(guard.logs).length : 0;
+                const palette = GUARD_BUTTON_PALETTES[idx % GUARD_BUTTON_PALETTES.length];
 
                 return `
-                    <button type="button" onclick="recordPatrol('${guard.id}')"
-                        class="btn-press touch-target w-full py-4 px-6 rounded-2xl font-bold text-base sm:text-lg shadow-lg flex items-center justify-between gap-3 cursor-pointer ${style.btn}">
-                        <span class="truncate">Devriye - ${escapeHtml(guard.name)}</span>
-                        ${badgeHtml}
+                    <button type="button"
+                        onclick="recordPatrolEntry('${guard.id}')"
+                        ${isRecording ? "disabled" : ""}
+                        class="touch-target group relative text-left p-4 sm:p-5 rounded-2xl border-2 transition-all duration-200 cursor-pointer flex items-center justify-between gap-3
+                        ${loggedAt
+                            ? "bg-gradient-to-br from-emerald-100 via-green-50 to-emerald-100/90 border-emerald-500 hover:from-emerald-100 hover:to-green-100"
+                            : palette.card}
+                        ${isRecording ? "opacity-60 pointer-events-none" : "active:scale-[0.98] shadow-md"}">
+                        <div class="flex items-center gap-3.5 min-w-0">
+                            <div class="w-12 h-12 rounded-2xl flex items-center justify-center font-black text-base shrink-0
+                                ${loggedAt ? "bg-emerald-600 text-white shadow-sm" : palette.avatar}">
+                                ${idx + 1}
+                            </div>
+                            <div class="min-w-0">
+                                <div class="text-sm sm:text-base font-extrabold truncate ${loggedAt ? "text-emerald-950" : palette.title}">${guard.name}</div>
+                                <div class="text-xs font-semibold mt-0.5 ${loggedAt ? "text-emerald-800 font-bold" : palette.sub}">
+                                    ${loggedAt ? `${currentSlot} Kaydı Alındı (${loggedAt})` : `${currentSlot} Devriyesi İçin Dokunun`}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col items-end shrink-0 gap-1">
+                            <span class="px-2.5 py-1 rounded-lg text-[11px] font-extrabold shadow-xs
+                                ${loggedAt ? "bg-emerald-600 text-white" : palette.badge}">
+                                ${loggedAt ? "KAYITLI" : "KAYIT YAP"}
+                            </span>
+                            <span class="text-[10px] font-bold ${loggedAt ? "text-emerald-900" : palette.total}">Toplam: ${totalDone}/12</span>
+                        </div>
                     </button>
                 `;
             }).join("");
+
+            if (window.lucide) window.lucide.createIcons();
         }
 
-        function renderScheduleTable() {
-            const tbody = document.getElementById("schedule-table-body");
-            if (!tbody) return;
+        function updateClockLoop() {
+            const now = new Date();
+            const clockEl = document.getElementById("live-clock");
+            const dateEl = document.getElementById("live-date");
+            const badgeEl = document.getElementById("active-slot-badge");
 
-            tbody.innerHTML = appState.guards.map(guard => {
-                const cells = TIME_SLOTS.map(slot => {
-                    const recorded = guard.records[slot];
-                    if (recorded) {
-                        return `<td class="py-3 px-2.5 text-center font-bold text-emerald-300 bg-emerald-500/10">${escapeHtml(recorded)}</td>`;
+            if (clockEl) clockEl.textContent = now.toLocaleTimeString("tr-TR");
+            if (dateEl) dateEl.textContent = now.toLocaleDateString("tr-TR");
+            if (badgeEl) badgeEl.textContent = `Aktif Saat Dilimi: ${getCurrentPatrolSlot(now)}`;
+        }
+
+        async function initRealtimeSync() {
+            loadLocalMirror();
+            renderGuardsGrid();
+            updateSoundButtonUI();
+            updateLastRecordedUI();
+
+            try {
+                if (typeof __firebase_config !== "undefined" && __firebase_config) {
+                    const firebaseConfig = JSON.parse(__firebase_config);
+                    const appId = typeof __app_id !== "undefined" ? __app_id : "poskiran-devriye-ortak";
+                    const app = initializeApp(firebaseConfig);
+                    auth = getAuth(app);
+                    db = getFirestore(app);
+
+                    if (typeof __initial_auth_token !== "undefined" && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
                     }
-                    return `<td class="py-3 px-2.5 text-center text-stone-500">-</td>`;
-                }).join("");
 
-                return `
-                    <tr class="hover:bg-white/[0.03] transition-colors">
-                        <td class="py-3 px-4 sticky left-0 bg-[#221a12] z-10 border-r border-white/10 font-semibold text-white whitespace-nowrap">${escapeHtml(guard.name)}</td>
-                        ${cells}
-                    </tr>
-                `;
-            }).join("");
-        }
+                    // Tüm cihazların ve ikinci uygulamanın bağlandığı ortak bulut dokümanı
+                    sharedDocRef = doc(db, "artifacts", appId, "public", "data", "patrol_live_sync", "current_night");
 
-        function renderOzetTab() {
-            const totalGuards = appState.guards.length;
-            const totalPossibleSlots = totalGuards * TIME_SLOTS.length;
-            let recordedCount = 0;
+                    onSnapshot(sharedDocRef, (snap) => {
+                        isCloudReady = true;
+                        updateSyncBadge(true, "Canlı Bağlı (Tüm Cihazlar)");
 
-            appState.guards.forEach(g => {
-                TIME_SLOTS.forEach(slot => {
-                    if (g.records[slot]) recordedCount++;
-                });
-            });
+                        if (snap.exists()) {
+                            const data = snap.data();
+                            if (data && Array.isArray(data.guards)) {
+                                state.guards = data.guards;
+                                if (typeof data.soundEnabled === "boolean") state.soundEnabled = data.soundEnabled;
+                                if (data.targetEmail) state.targetEmail = data.targetEmail;
+                                if (typeof data.mailWebhookUrl === "string") state.mailWebhookUrl = data.mailWebhookUrl;
+                                if (data.lastRecordedText) state.lastRecordedText = data.lastRecordedText;
 
-            const emptyCount = totalPossibleSlots - recordedCount;
-
-            const elTotal = document.getElementById("stat-total-guards");
-            const elRecorded = document.getElementById("stat-recorded-patrols");
-            const elEmpty = document.getElementById("stat-empty-slots");
-            if (elTotal) elTotal.textContent = totalGuards;
-            if (elRecorded) elRecorded.textContent = recordedCount;
-            if (elEmpty) elEmpty.textContent = emptyCount;
-
-            const summaryDateText = document.getElementById("summary-date-text");
-            if (summaryDateText) {
-                summaryDateText.textContent = `${getFormattedDate(new Date())} • Gece Vardiya Raporu (19:00 - 06:00)`;
-            }
-
-            const autoBadge = document.getElementById("auto-report-status-badge");
-            if (autoBadge) {
-                if (appState.autoMorningReport) {
-                    autoBadge.textContent = "08:00 Günlük PDF Aktif";
-                    autoBadge.className = "px-2.5 py-1.5 rounded-lg bg-emerald-100 text-emerald-800 font-bold whitespace-nowrap";
+                                saveLocalMirror();
+                                renderGuardsGrid();
+                                updateSoundButtonUI();
+                                updateLastRecordedUI();
+                            }
+                        } else {
+                            // İlk kurulumda ortak dokümanı oluştur
+                            persistSharedState();
+                        }
+                    }, (error) => {
+                        console.error("Snapshot dinleme hatası:", error);
+                        updateSyncBadge(false, "Yerel Senkronizasyon");
+                    });
                 } else {
-                    autoBadge.textContent = "08:00 Otomasyon Kapalı";
-                    autoBadge.className = "px-2.5 py-1.5 rounded-lg bg-stone-200 text-stone-700 font-bold whitespace-nowrap";
+                    updateSyncBadge(false, "Yerel Tarayıcı Senkronizasyonu");
                 }
+            } catch (err) {
+                console.error("Bulut başlatma hatası:", err);
+                updateSyncBadge(false, "Yerel Senkronizasyon");
             }
 
-            const grid = document.getElementById("summary-guards-grid");
-            if (!grid) return;
-
-            // Salt okunur kutucuklar: yalnızca devriye butonlarına basıldığında değer alır
-            grid.innerHTML = appState.guards.map(guard => {
-                const guardEmptyCount = TIME_SLOTS.filter(s => !guard.records[s]).length;
-
-                const slotsHtml = TIME_SLOTS.map(slot => {
-                    const recordedTime = guard.records[slot];
-                    if (recordedTime) {
-                        return `
-                            <div aria-readonly="true" class="bg-[#e8f5e9] border border-emerald-400/60 rounded-xl py-2 px-1.5 text-center shadow-xs select-none cursor-default">
-                                <div class="text-xs font-bold text-emerald-950">${slot}</div>
-                                <div class="text-xs font-extrabold text-emerald-700 mt-0.5">${escapeHtml(recordedTime)}</div>
-                            </div>
-                        `;
-                    }
-                    return `
-                        <div aria-readonly="true" class="bg-[#f3eee4] border border-[#e3dac8] rounded-xl py-2 px-1.5 text-center select-none cursor-default">
-                            <div class="text-xs font-bold text-[#6e6354]">${slot}</div>
-                            <div class="text-xs font-semibold text-[#9c8f7d] mt-0.5">Boş</div>
-                        </div>
-                    `;
-                }).join("");
-
-                return `
-                    <div class="bg-[#fbf9f5] border border-[#e6dec8] rounded-2xl p-4 sm:p-5 shadow-xs space-y-3.5">
-                        <div class="flex items-center justify-between gap-2">
-                            <h3 class="font-bold text-base sm:text-lg text-[#1f1a14] truncate">${escapeHtml(guard.name)}</h3>
-                            <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-[#f1eadc] text-[#6e6354] shrink-0">${guardEmptyCount} boş</span>
-                        </div>
-                        <div class="grid grid-cols-4 sm:grid-cols-6 gap-2">
-                            ${slotsHtml}
-                        </div>
-                    </div>
-                `;
-            }).join("");
-
-            renderPdfArchive();
-        }
-
-        function renderPdfArchive() {
-            const listEl = document.getElementById("pdf-archive-list");
-            const countEl = document.getElementById("pdf-archive-count");
-            if (countEl) countEl.textContent = `${pdfArchive.length} PDF`;
-            if (!listEl) return;
-
-            if (!pdfArchive.length) {
-                listEl.innerHTML = `<div class="text-[#786d5f] py-2">Henüz kaydedilmiş gece devriye PDF raporu bulunmuyor.</div>`;
-                return;
-            }
-
-            listEl.innerHTML = pdfArchive.map((item, idx) => `
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-white border border-[#e6dec8] rounded-xl px-3.5 py-2.5">
-                    <div class="min-w-0">
-                        <p class="font-bold text-[#1f1a14] truncate">${escapeHtml(item.fileName)}</p>
-                        <p class="text-[11px] text-[#786d5f]">${escapeHtml(item.createdAt)} • <span class="font-semibold text-emerald-700">${escapeHtml(item.status || "Günlük PDF Kaydedildi")}</span></p>
-                    </div>
-                    <div class="flex items-center gap-2 shrink-0">
-                        <button type="button" onclick="downloadStoredPdf(${idx})" class="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition-colors cursor-pointer">
-                            PDF İndir
-                        </button>
-                    </div>
-                </div>
-            `).join("");
-        }
-
-        function renderAll() {
-            renderGuardsActionButtons();
-            renderScheduleTable();
-            renderOzetTab();
-            safeRenderIcons();
-        }
-
-        // ==========================================
-        // 7. AYARLAR & BEKÇİ YÖNETİMİ
-        // ==========================================
-        function openSettingsModal() {
-            const soundToggle = document.getElementById("toggle-sound-alert");
-            if (soundToggle) soundToggle.checked = Boolean(appState.soundEnabled);
-
-            const autoMorningToggle = document.getElementById("toggle-auto-morning");
-            if (autoMorningToggle) autoMorningToggle.checked = Boolean(appState.autoMorningReport);
-
-            renderSettingsGuardsList();
-            document.getElementById("settings-modal").classList.remove("hidden");
-            safeRenderIcons();
-        }
-
-        function closeSettingsModal() {
-            document.getElementById("settings-modal").classList.add("hidden");
-        }
-
-        function toggleSystemOption(key, checked) {
-            appState[key] = Boolean(checked);
-            saveState();
-            renderAll();
-            showToast("AYAR GÜNCELLENDİ", "Sistem tercihi kaydedildi.");
-        }
-
-        function addNewGuard() {
-            const nameInput = document.getElementById("new-guard-name");
-            const colorSelect = document.getElementById("new-guard-color");
-            if (!nameInput) return;
-
-            const name = nameInput.value.trim();
-            if (!name) {
-                showToast("İSİM GİRİNİZ", "Lütfen güvenlikçi adını yazınız.");
-                return;
-            }
-
-            const color = (colorSelect && COLOR_STYLES[colorSelect.value]) ? colorSelect.value : "red";
-            appState.guards.push({
-                id: `g_${Date.now()}`,
-                name,
-                color,
-                records: {},
-                lastPatrol: null
+            // Aynı cihazdaki sekmeler arası anlık eşitleme
+            window.addEventListener("storage", (event) => {
+                if (event.key === SHARED_STORAGE_KEY && event.newValue) {
+                    try {
+                        const updated = JSON.parse(event.newValue);
+                        if (updated && Array.isArray(updated.guards)) {
+                            state = { ...state, ...updated };
+                            renderGuardsGrid();
+                            updateSoundButtonUI();
+                            updateLastRecordedUI();
+                        }
+                    } catch (e) {}
+                }
             });
-
-            nameInput.value = "";
-            saveState();
-            renderSettingsGuardsList();
-            renderAll();
-            showToast("GÜVENLİKÇİ EKLENDİ", `${name} listeye eklendi.`);
         }
 
-        function renderSettingsGuardsList() {
-            const listEl = document.getElementById("settings-guards-list");
-            if (!listEl) return;
-
-            listEl.innerHTML = appState.guards.map(guard => {
-                const colorOptions = Object.keys(COLOR_STYLES).map(c => {
-                    const labels = {
-                        red: "Kırmızı",
-                        green: "Yeşil",
-                        blue: "Mavi",
-                        orange: "Turuncu",
-                        purple: "Mor",
-                        teal: "Turkuaz"
-                    };
-                    return `<option value="${c}" ${guard.color === c ? "selected" : ""}>${labels[c]}</option>`;
-                }).join("");
-
-                return `
-                    <div class="flex items-center justify-between gap-2 bg-black/30 border border-white/10 rounded-xl px-3 py-2">
-                        <span class="text-xs sm:text-sm font-semibold truncate">${escapeHtml(guard.name)}</span>
-                        <div class="flex items-center gap-2 shrink-0">
-                            <select onchange="updateGuardColor('${guard.id}', this.value)" class="bg-black/50 border border-white/15 rounded-lg px-2 py-1 text-xs text-white focus:outline-none">
-                                ${colorOptions}
-                            </select>
-                            <button type="button" onclick="deleteGuard('${guard.id}')" ${appState.guards.length <= 1 ? "disabled" : ""}
-                                class="p-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 disabled:opacity-30 text-red-300 transition-colors cursor-pointer" title="Güvenlikçiyi Sil">
-                                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }).join("");
-            safeRenderIcons();
-        }
-
-        function updateGuardColor(id, newColor) {
-            const guard = appState.guards.find(g => g.id === id);
-            if (guard) {
-                guard.color = newColor;
-                saveState();
-                renderAll();
-            }
-        }
-
-        function deleteGuard(id) {
-            if (appState.guards.length <= 1) return;
-            appState.guards = appState.guards.filter(g => g.id !== id);
-            saveState();
-            renderSettingsGuardsList();
-            renderAll();
-        }
-
-        function openResetConfirmModal() {
-            document.getElementById("reset-modal").classList.remove("hidden");
-            safeRenderIcons();
-        }
-
-        function closeResetConfirmModal() {
-            document.getElementById("reset-modal").classList.add("hidden");
-        }
-
-        function confirmResetAll() {
-            appState.guards.forEach(g => {
-                g.records = {};
-                g.lastPatrol = null;
+        window.addEventListener("load", () => {
+            updateClockLoop();
+            setInterval(updateClockLoop, 1000);
+            initRealtimeSync();
+            setupPwaInstallSupport({
+                name: "Poskıran Konfeksiyon - Devriye Giriş",
+                shortName: "Devriye Giriş",
+                themeColor: "#231d16",
+                bgColor: "#f3efe6",
+                accentColor: "#ea580c",
+                badgeText: "GİRİŞ"
             });
-            const pdfBanner = document.getElementById("pdf-share-banner");
-            if (pdfBanner) pdfBanner.classList.add("hidden");
-
-            saveState();
-            closeResetConfirmModal();
-            renderAll();
-            showToast("KAYITLAR SIFIRLANDI", "Yeni gece vardiyası için çizelge temizlendi.");
-        }
-
-        // ==========================================
-        // 8. TOAST & XSS KORUMA
-        // ==========================================
-        function showToast(title, subtitle) {
-            const toast = document.getElementById("toast-notification");
-            if (!toast) return;
-            document.getElementById("toast-title").textContent = title;
-            document.getElementById("toast-subtitle").textContent = subtitle;
-
-            toast.classList.remove("hidden");
-            toast.classList.remove("toast-enter");
-            void toast.offsetWidth;
-            toast.classList.add("toast-enter");
-
-            if (toastTimeout) clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => {
-                toast.classList.add("hidden");
-            }, 3500);
-        }
-
-        function escapeHtml(str) {
-            return String(str || "")
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;");
-        }
-
-        // ==========================================
-        // 9. BAŞLATMA
-        // ==========================================
-        window.addEventListener("DOMContentLoaded", () => {
-            activeGoogleUser = loadSavedGoogleSession();
-            loadState();
-            updateAuthUI();
-            updateLiveClock();
-            setInterval(updateLiveClock, 1000);
-            renderAll();
         });
+
+        // CHROME ANA EKRANA YÜKLEME (PWA MANIFEST + SERVICE WORKER + INSTALL PROMPT)
+        let deferredInstallPrompt = null;
+
+        function createPwaIconDataUrl(accentColor, badgeText) {
+            const canvas = document.createElement("canvas");
+            canvas.width = 512;
+            canvas.height = 512;
+            const ctx = canvas.getContext("2d");
+
+            ctx.fillStyle = "#231d16";
+            ctx.beginPath();
+            ctx.roundRect(0, 0, 512, 512, 96);
+            ctx.fill();
+
+            ctx.fillStyle = accentColor;
+            ctx.beginPath();
+            ctx.roundRect(44, 44, 424, 424, 72);
+            ctx.fill();
+
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "900 132px Inter, Arial, sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("PK", 256, 225);
+
+            ctx.font = "800 46px Inter, Arial, sans-serif";
+            ctx.fillText(badgeText, 256, 355);
+
+            return canvas.toDataURL("image/png");
+        }
+
+        function setupPwaInstallSupport({ name, shortName, themeColor, bgColor, accentColor, badgeText }) {
+            try {
+                const iconPng = createPwaIconDataUrl(accentColor, badgeText);
+
+                let appleIcon = document.querySelector("link[rel='apple-touch-icon']");
+                if (!appleIcon) {
+                    appleIcon = document.createElement("link");
+                    appleIcon.rel = "apple-touch-icon";
+                    document.head.appendChild(appleIcon);
+                }
+                appleIcon.href = iconPng;
+
+                const manifestObj = {
+                    name,
+                    short_name: shortName,
+                    start_url: window.location.href,
+                    scope: "./",
+                    display: "standalone",
+                    orientation: "portrait",
+                    background_color: bgColor,
+                    theme_color: themeColor,
+                    icons: [
+                        { src: iconPng, sizes: "192x192", type: "image/png", purpose: "any maskable" },
+                        { src: iconPng, sizes: "512x512", type: "image/png", purpose: "any maskable" }
+                    ]
+                };
+
+                const manifestBlob = new Blob([JSON.stringify(manifestObj)], { type: "application/manifest+json" });
+                const manifestUrl = URL.createObjectURL(manifestBlob);
+                const manifestLink = document.createElement("link");
+                manifestLink.rel = "manifest";
+                manifestLink.href = manifestUrl;
+                document.head.appendChild(manifestLink);
+
+                if ("serviceWorker" in navigator && (window.location.protocol === "https:" || window.location.hostname === "localhost")) {
+                    const swCode = `
+                        const CACHE_NAME = 'poskiran-giris-pwa-v1';
+                        self.addEventListener('install', (e) => {
+                            self.skipWaiting();
+                        });
+                        self.addEventListener('activate', (e) => {
+                            e.waitUntil(self.clients.claim());
+                        });
+                        self.addEventListener('fetch', (e) => {
+                            if (e.request.method !== 'GET') return;
+                            e.respondWith(
+                                fetch(e.request).then((res) => {
+                                    const copy = res.clone();
+                                    caches.open(CACHE_NAME).then((cache) => cache.put(e.request, copy)).catch(() => {});
+                                    return res;
+                                }).catch(() => caches.match(e.request))
+                            );
+                        });
+                    `;
+                    const swBlob = new Blob([swCode], { type: "application/javascript" });
+                    const swUrl = URL.createObjectURL(swBlob);
+                    navigator.serviceWorker.register(swUrl).catch(() => {});
+                }
+
+                const installBtn = document.getElementById("pwa-install-btn");
+                const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+
+                window.addEventListener("beforeinstallprompt", (e) => {
+                    e.preventDefault();
+                    deferredInstallPrompt = e;
+                    if (installBtn && !isStandalone) {
+                        installBtn.classList.remove("hidden");
+                    }
+                });
+
+                window.addEventListener("appinstalled", () => {
+                    deferredInstallPrompt = null;
+                    if (installBtn) installBtn.classList.add("hidden");
+                    showToast("Uygulama cihazınızın ana ekranına başarıyla yüklendi.");
+                });
+
+                if (!isStandalone && installBtn) {
+                    setTimeout(() => {
+                        installBtn.classList.remove("hidden");
+                    }, 1500);
+                }
+            } catch (err) {
+                console.warn("PWA kurulum hazırlığı:", err);
+            }
+        }
+
+        window.triggerPwaInstall = async function () {
+            if (deferredInstallPrompt) {
+                deferredInstallPrompt.prompt();
+                const choice = await deferredInstallPrompt.userChoice;
+                if (choice && choice.outcome === "accepted") {
+                    deferredInstallPrompt = null;
+                    const btn = document.getElementById("pwa-install-btn");
+                    if (btn) btn.classList.add("hidden");
+                }
+                return;
+            }
+            showToast("Chrome sağ üst menüsünden (⋮) 'Ana ekrana ekle' veya 'Uygulamayı yükle' seçeneğine dokunun.");
+        };
     </script>
 </body>
 </html>
